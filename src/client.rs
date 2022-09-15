@@ -1,4 +1,5 @@
-use crate::{http, Error, Method, Request, StatusCode, Url};
+use crate::{http, Error, Method, Request, SocketRequest, StatusCode, Url};
+use async_std::task::sleep;
 use serde::de::DeserializeOwned;
 use std::time::{Duration, Instant};
 use surf::http::headers::ACCEPT;
@@ -42,7 +43,7 @@ impl<E: Error> Client<E> {
         while timeout.map(|t| Instant::now() < t).unwrap_or(true) {
             match self.inner.get("/healthcheck").send().await {
                 Ok(res) if res.status() == StatusCode::Ok => return true,
-                _ => continue,
+                _ => sleep(Duration::from_secs(10)).await,
             }
         }
         false
@@ -66,6 +67,22 @@ impl<E: Error> Client<E> {
         req.header(ACCEPT, "application/octet-stream")
     }
 
+    /// Build a streaming connection request.
+    ///
+    /// # Panics
+    ///
+    /// This will panic if a malformed URL is passed.
+    pub fn socket(&self, route: &str) -> SocketRequest<E> {
+        self.inner
+            .config()
+            .base_url
+            .as_ref()
+            .unwrap()
+            .join(route)
+            .unwrap()
+            .into()
+    }
+
     /// Create a client for a sub-module of the connected application.
     pub fn module<ModError: Error>(
         &self,
@@ -86,7 +103,7 @@ impl<E: Error> Client<E> {
 mod test {
     use super::*;
     use async_std::task::spawn;
-    use futures::FutureExt;
+    use futures::{stream::iter, FutureExt, SinkExt, StreamExt};
     use portpicker::pick_unused_port;
     use tide_disco::{error::ServerError, App};
     use toml::toml;
@@ -167,5 +184,67 @@ mod test {
         if err.status != StatusCode::BadRequest || err.message != "invalid body" {
             panic!("unexpected error {}", err);
         }
+    }
+
+    #[async_std::test]
+    async fn test_streaming_client() {
+        // Set up a simple Tide Disco app as an example.
+        let mut app: App<(), ServerError> = App::with_state(());
+        let api = toml! {
+            [route.echo]
+            PATH = ["/echo"]
+            METHOD = "SOCKET"
+
+            [route.naturals]
+            PATH = ["/naturals/:max"]
+            METHOD = "SOCKET"
+            ":max" = "Integer"
+        };
+        app.module::<ServerError>("mod", api)
+            .unwrap()
+            .socket::<_, String, String>("echo", |_req, mut conn, _state| {
+                async move {
+                    while let Some(Ok(msg)) = conn.next().await {
+                        conn.send(&msg).await.unwrap();
+                    }
+                    Ok(())
+                }
+                .boxed()
+            })
+            .unwrap()
+            .stream("naturals", |req, _state| {
+                iter(0..req.integer_param("max").unwrap()).map(Ok).boxed()
+            })
+            .unwrap();
+        let port = pick_unused_port().unwrap();
+        spawn(app.serve(format!("0.0.0.0:{}", port)));
+
+        // Connect a client.
+        let client =
+            Client::<ServerError>::new(format!("http://localhost:{}", port).parse().unwrap());
+        assert!(client.connect(None).await);
+
+        // Test a bidirectional endpoint.
+        let mut conn = client
+            .socket("mod/echo")
+            .connect::<String, String>()
+            .await
+            .unwrap();
+        conn.send(&"foo".into()).await.unwrap();
+        assert_eq!(conn.next().await.unwrap().unwrap(), "foo");
+        conn.send(&"bar".into()).await.unwrap();
+        assert_eq!(conn.next().await.unwrap().unwrap(), "bar");
+
+        // Test a streaming endpoint.
+        assert_eq!(
+            client
+                .socket("mod/naturals/10")
+                .subscribe::<u64>()
+                .await
+                .unwrap()
+                .collect::<Vec<_>>()
+                .await,
+            (0..10).map(Ok).collect::<Vec<_>>()
+        );
     }
 }
