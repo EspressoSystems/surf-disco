@@ -3,8 +3,12 @@
 //! # Quick Start
 //!
 //! ```
-//! let client: Client<error::ClientError> = Client::new("http://localhost:50000");
+//! # use surf_disco::{Client, error::ClientError};
+//! # async fn ex() {
+//! let url = "http://localhost:50000".parse().unwrap();
+//! let client: Client<ClientError> = Client::new(url);
 //! let res: String = client.get("/app/route").send().await.unwrap();
+//! # }
 //! ```
 //!
 use serde::de::DeserializeOwned;
