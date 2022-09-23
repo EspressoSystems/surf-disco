@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["surf_disco"] = [{"text":"impl&lt;E:&nbsp;<a class=\"trait\" href=\"surf_disco/trait.Error.html\" title=\"trait surf_disco::Error\">Error</a>&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/1.64.0/core/default/trait.Default.html\" title=\"trait core::default::Default\">Default</a> for <a class=\"struct\" href=\"surf_disco/client/struct.Client.html\" title=\"struct surf_disco::client::Client\">Client</a>&lt;E&gt;","synthetic":false,"types":["surf_disco::client::Client"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
