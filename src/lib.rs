@@ -30,12 +30,12 @@ pub use surf::{
 
 /// Build an HTTP `GET` request.
 pub fn get<T: DeserializeOwned, E: Error>(url: Url) -> Request<T, E> {
-    Client::new(url).get("/")
+    Client::default().get(url.as_ref())
 }
 
 /// Build an HTTP `POST` request.
 pub fn post<T: DeserializeOwned, E: Error>(url: Url) -> Request<T, E> {
-    Client::new(url).post("/")
+    Client::default().post(url.as_ref())
 }
 
 /// Connect to a server, retrying if the server is not running.

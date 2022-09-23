@@ -11,6 +11,15 @@ pub struct Client<E> {
     _marker: std::marker::PhantomData<fn(E) -> ()>,
 }
 
+impl<E: Error> Default for Client<E> {
+    fn default() -> Self {
+        Self {
+            inner: surf::Config::new().try_into().unwrap(),
+            _marker: Default::default(),
+        }
+    }
+}
+
 impl<E: Error> Client<E> {
     /// Create a client and connect to the Tide Disco server at `base_url`.
     pub fn new(base_url: Url) -> Self {
