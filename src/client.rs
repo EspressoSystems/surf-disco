@@ -4,6 +4,8 @@ use serde::de::DeserializeOwned;
 use std::time::{Duration, Instant};
 use surf::http::headers::ACCEPT;
 
+pub use tide_disco::healthcheck::{HealthCheck, HealthStatus};
+
 /// A client of a Tide Disco application.
 #[derive(Clone, Debug)]
 pub struct Client<E> {
@@ -22,7 +24,15 @@ impl<E: Error> Default for Client<E> {
 
 impl<E: Error> Client<E> {
     /// Create a client and connect to the Tide Disco server at `base_url`.
-    pub fn new(base_url: Url) -> Self {
+    pub fn new(mut base_url: Url) -> Self {
+        // If the path part of `base_url` does not end in `/`, `join` will treat it as a filename
+        // and remove it, which is never what we want: `base_url` is _always_ a directory-like path.
+        // To avoid the annoyance of having every caller add a trailing slash if necessary, we will
+        // add a trailing slash here if there isn't one already.
+        if !base_url.path().ends_with('/') {
+            base_url.set_path(&format!("{}/", base_url.path()));
+        }
+
         // This `unwrap` can only fail if [surf] is built without the `default-client` feature flag,
         // which is a default feature and one we require to build this crate.
         let inner = surf::Config::new()
@@ -58,6 +68,28 @@ impl<E: Error> Client<E> {
         false
     }
 
+    /// Connect to the server, retrying until the server is `healthy`.
+    ///
+    /// This function is similar to [connect](Self::connect). It will make requests to the
+    /// `/healthcheck` endpoint until a request succeeds. However, it will then continue retrying
+    /// until the response from `/healthcheck` satisfies the `healthy` predicate.
+    ///
+    /// On success, returns the response from `/healthcheck`. On timeout, returns `None`.
+    pub async fn wait_for_health<H: DeserializeOwned + HealthCheck>(
+        &self,
+        healthy: impl Fn(&H) -> bool,
+        timeout: Option<Duration>,
+    ) -> Option<H> {
+        let timeout = timeout.map(|d| Instant::now() + d);
+        while timeout.map(|t| Instant::now() < t).unwrap_or(true) {
+            match self.healthcheck::<H>().await {
+                Ok(health) if healthy(&health) => return Some(health),
+                _ => sleep(Duration::from_secs(10)).await,
+            }
+        }
+        None
+    }
+
     /// Build an HTTP `GET` request.
     pub fn get<T: DeserializeOwned>(&self, route: &str) -> Request<T, E> {
         self.request(Method::Get, route)
@@ -66,6 +98,11 @@ impl<E: Error> Client<E> {
     /// Build an HTTP `POST` request.
     pub fn post<T: DeserializeOwned>(&self, route: &str) -> Request<T, E> {
         self.request(Method::Post, route)
+    }
+
+    /// Query the server's healthcheck endpoint.
+    pub async fn healthcheck<H: DeserializeOwned + HealthCheck>(&self) -> Result<H, E> {
+        self.get("healthcheck").send().await
     }
 
     /// Build an HTTP request with the specified method.
@@ -111,9 +148,10 @@ impl<E: Error> Client<E> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use async_std::task::spawn;
+    use async_std::{sync::RwLock, task::spawn};
     use futures::{stream::iter, FutureExt, SinkExt, StreamExt};
     use portpicker::pick_unused_port;
+    use serde::{Deserialize, Serialize};
     use tide_disco::{error::ServerError, App};
     use toml::toml;
 
@@ -180,16 +218,6 @@ mod test {
             .send()
             .await
             .unwrap_err();
-        println!(
-            "{}",
-            hex::encode(
-                &bincode::serialize(&ServerError::catch_all(
-                    StatusCode::BadRequest,
-                    "invalid body".into()
-                ))
-                .unwrap()
-            )
-        );
         if err.status != StatusCode::BadRequest || err.message != "invalid body" {
             panic!("unexpected error {}", err);
         }
@@ -255,5 +283,73 @@ mod test {
                 .await,
             (0..10).map(Ok).collect::<Vec<_>>()
         );
+    }
+
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
+    enum HealthCheck {
+        Ready,
+        Initializing,
+    }
+
+    impl super::HealthCheck for HealthCheck {
+        fn status(&self) -> StatusCode {
+            StatusCode::Ok
+        }
+    }
+
+    #[async_std::test]
+    async fn test_healthcheck() {
+        // Set up a simple Tide Disco app as an example.
+        let mut app: App<_, ServerError> = App::with_state(RwLock::new(HealthCheck::Initializing));
+        let api = toml! {
+            [route.init]
+            PATH = ["/init"]
+            METHOD = "POST"
+        };
+        app.module::<ServerError>("mod", api)
+            .unwrap()
+            .with_health_check(|state| async move { *state.read().await }.boxed())
+            .post("init", |_, state| {
+                async move {
+                    *state = HealthCheck::Ready;
+                    Ok(())
+                }
+                .boxed()
+            })
+            .unwrap();
+        let port = pick_unused_port().unwrap();
+        spawn(app.serve(format!("0.0.0.0:{}", port)));
+
+        // Connect a client.
+        let client =
+            Client::<ServerError>::new(format!("http://localhost:{}/mod", port).parse().unwrap());
+        assert!(client.connect(None).await);
+        assert_eq!(
+            HealthCheck::Initializing,
+            client.healthcheck().await.unwrap()
+        );
+
+        // Waiting for [HealthCheck::Ready] should time out.
+        assert_eq!(
+            client
+                .wait_for_health::<HealthCheck>(
+                    |h| *h == HealthCheck::Ready,
+                    Some(Duration::from_secs(1))
+                )
+                .await,
+            None
+        );
+
+        // Initialize the service.
+        client.post::<()>("init").send().await.unwrap();
+
+        // Now waiting for [HealthCheck::Ready] should succeed.
+        assert_eq!(
+            client
+                .wait_for_health::<HealthCheck>(|h| *h == HealthCheck::Ready, None)
+                .await,
+            Some(HealthCheck::Ready)
+        );
+        assert_eq!(HealthCheck::Ready, client.healthcheck().await.unwrap());
     }
 }
