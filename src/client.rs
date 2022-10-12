@@ -1,11 +1,13 @@
 use crate::{http, Error, Method, Request, SocketRequest, StatusCode, Url};
 use async_std::task::sleep;
+use derivative::Derivative;
 use serde::de::DeserializeOwned;
 use std::time::{Duration, Instant};
 use surf::http::headers::ACCEPT;
 
 /// A client of a Tide Disco application.
-#[derive(Clone, Debug)]
+#[derive(Derivative)]
+#[derivative(Clone(bound = ""), Debug(bound = ""))]
 pub struct Client<E> {
     inner: surf::Client,
     _marker: std::marker::PhantomData<fn(E) -> ()>,
