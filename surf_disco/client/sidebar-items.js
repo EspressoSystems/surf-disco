@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["Client","A client of a Tide Disco application."]]};
+window.SIDEBAR_ITEMS = {"enum":[["HealthStatus","Common health statuses of an application."]],"struct":[["Client","A client of a Tide Disco application."]],"trait":[["HealthCheck","A response to a healthcheck endpoint."]]};
