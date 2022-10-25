@@ -75,17 +75,28 @@ impl<T: DeserializeOwned, E: Error> Request<T, E> {
         if res.status() == StatusCode::Ok {
             // If the response indicates success, deserialize the body using a format determined by
             // the Content-Type header.
-            if let Some(content_type) = res.header("Content-Type") {
+            if let Some(content_type) = res.header("Content-Type").cloned() {
                 match content_type.as_str() {
                     "application/json" => res.body_json().await.map_err(surf_error),
                     "application/octet-stream" => {
                         bincode::deserialize(&res.body_bytes().await.map_err(surf_error)?)
                             .map_err(request_error)
                     }
-                    content_type => Err(E::catch_all(
-                        StatusCode::UnsupportedMediaType,
-                        format!("unsupported content type {}", content_type),
-                    )),
+                    content_type => {
+                        // For help in debugging, include the body with the unexpected content type
+                        // in the error message.
+                        let msg = match res.body_bytes().await {
+                            Ok(bytes) => match std::str::from_utf8(&bytes) {
+                                Ok(s) => format!("body: {}", s),
+                                Err(_) => format!("body: {}", hex::encode(&bytes)),
+                            },
+                            Err(_) => String::default(),
+                        };
+                        Err(E::catch_all(
+                            StatusCode::UnsupportedMediaType,
+                            format!("unsupported content type {} {}", content_type, msg),
+                        ))
+                    }
                 }
             } else {
                 Err(E::catch_all(
@@ -116,7 +127,6 @@ impl<T: DeserializeOwned, E: Error> Request<T, E> {
             if let Some(content_type) = res.header("Content-Type") {
                 // If the response specifies a content type, check if it is one of the types we know
                 // how to deserialize, and if it is, we can then see if it deserializes to an `E`.
-                println!("Content-Type {}", content_type.as_str());
                 match content_type.as_str() {
                     "application/json" => {
                         if let Ok(err) = serde_json::from_slice(&bytes) {
