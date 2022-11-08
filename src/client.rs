@@ -26,25 +26,13 @@ impl<E: Error> Default for Client<E> {
 
 impl<E: Error> Client<E> {
     /// Create a client and connect to the Tide Disco server at `base_url`.
-    pub fn new(mut base_url: Url) -> Self {
-        // If the path part of `base_url` does not end in `/`, `join` will treat it as a filename
-        // and remove it, which is never what we want: `base_url` is _always_ a directory-like path.
-        // To avoid the annoyance of having every caller add a trailing slash if necessary, we will
-        // add a trailing slash here if there isn't one already.
-        if !base_url.path().ends_with('/') {
-            base_url.set_path(&format!("{}/", base_url.path()));
-        }
+    pub fn new(base_url: Url) -> Self {
+        Self::builder(base_url).build()
+    }
 
-        // This `unwrap` can only fail if [surf] is built without the `default-client` feature flag,
-        // which is a default feature and one we require to build this crate.
-        let inner = surf::Config::new()
-            .set_base_url(base_url)
-            .try_into()
-            .unwrap();
-        Self {
-            inner,
-            _marker: Default::default(),
-        }
+    /// Create a client with customization.
+    pub fn builder(base_url: Url) -> ClientBuilder<E> {
+        ClientBuilder::new(base_url)
     }
 
     /// Connect to the server, retrying if the server is not running.
@@ -144,6 +132,55 @@ impl<E: Error> Client<E> {
                 .unwrap()
                 .join(prefix)?,
         ))
+    }
+}
+
+/// Interface to specify optional configuration values before creating a [Client].
+pub struct ClientBuilder<E: Error> {
+    config: surf::Config,
+    _marker: std::marker::PhantomData<fn(E) -> ()>,
+}
+
+impl<E: Error> ClientBuilder<E> {
+    fn new(mut base_url: Url) -> Self {
+        // If the path part of `base_url` does not end in `/`, `join` will treat it as a filename
+        // and remove it, which is never what we want: `base_url` is _always_ a directory-like path.
+        // To avoid the annoyance of having every caller add a trailing slash if necessary, we will
+        // add a trailing slash here if there isn't one already.
+        if !base_url.path().ends_with('/') {
+            base_url.set_path(&format!("{}/", base_url.path()));
+        }
+        Self {
+            config: surf::Config::new().set_base_url(base_url),
+            _marker: Default::default(),
+        }
+    }
+
+    /// Set connection timeout duration.
+    ///
+    /// Passing `None` will remove the timeout.
+    ///
+    /// Default: `Some(Duration::from_secs(60))`.
+    pub fn set_timeout(mut self, timeout: Option<Duration>) -> Self {
+        self.config = self.config.set_timeout(timeout);
+        self
+    }
+
+    /// Create a [Client] with the settings specified in this builder.
+    pub fn build(self) -> Client<E> {
+        // This `unwrap` can only fail if [surf] is built without the `default-client` feature flag,
+        // which is a default feature and one we require to build this crate.
+        let inner = self.config.try_into().unwrap();
+        Client {
+            inner,
+            _marker: Default::default(),
+        }
+    }
+}
+
+impl<E: Error> From<ClientBuilder<E>> for Client<E> {
+    fn from(builder: ClientBuilder<E>) -> Self {
+        builder.build()
     }
 }
 
@@ -353,5 +390,17 @@ mod test {
             Some(HealthCheck::Ready)
         );
         assert_eq!(HealthCheck::Ready, client.healthcheck().await.unwrap());
+    }
+
+    #[test]
+    fn test_builder() {
+        let client = Client::<ServerError>::builder("http://www.example.com".parse().unwrap())
+            .set_timeout(None)
+            .build();
+        assert_eq!(
+            client.inner.config().base_url,
+            Some("http://www.example.com".parse().unwrap())
+        );
+        assert_eq!(client.inner.config().http_config.timeout, None);
     }
 }
