@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/client.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>client.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../surf_disco/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../surf_disco/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../surf_disco/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/client.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>client.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../surf_disco/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../surf_disco/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../surf_disco/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -355,362 +355,460 @@
 <span id="355">355</span>
 <span id="356">356</span>
 <span id="357">357</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">http</span>, <span class="ident">Error</span>, <span class="ident">Method</span>, <span class="ident">Request</span>, <span class="ident">SocketRequest</span>, <span class="ident">StatusCode</span>, <span class="ident">Url</span>};
-<span class="kw">use</span> <span class="ident">async_std::task::sleep</span>;
-<span class="kw">use</span> <span class="ident">derivative::Derivative</span>;
-<span class="kw">use</span> <span class="ident">serde::de::DeserializeOwned</span>;
-<span class="kw">use</span> <span class="ident">std::time</span>::{<span class="ident">Duration</span>, <span class="ident">Instant</span>};
-<span class="kw">use</span> <span class="ident">surf::http::headers::ACCEPT</span>;
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+</pre><pre class="rust"><code><span class="kw">use crate</span>::{http, Error, Method, Request, SocketRequest, StatusCode, Url};
+<span class="kw">use </span>async_std::task::sleep;
+<span class="kw">use </span>derivative::Derivative;
+<span class="kw">use </span>serde::de::DeserializeOwned;
+<span class="kw">use </span>std::time::{Duration, Instant};
+<span class="kw">use </span>surf::http::headers::ACCEPT;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">tide_disco::healthcheck</span>::{<span class="ident">HealthCheck</span>, <span class="ident">HealthStatus</span>};
+<span class="kw">pub use </span>tide_disco::healthcheck::{HealthCheck, HealthStatus};
 
-<span class="doccomment">/// A client of a Tide Disco application.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Derivative</span>)]</span>
-<span class="attribute">#[<span class="ident">derivative</span>(<span class="ident">Clone</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;&quot;</span>), <span class="ident">Debug</span>(<span class="ident">bound</span> <span class="op">=</span> <span class="string">&quot;&quot;</span>))]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Client</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="ident">inner</span>: <span class="ident">surf::Client</span>,
-    <span class="ident">_marker</span>: <span class="ident">std::marker::PhantomData</span><span class="op">&lt;</span><span class="kw">fn</span>(<span class="ident">E</span>) -&gt; ()<span class="op">&gt;</span>,
+<span class="doccomment">/// A client of a Tide Disco application.
+</span><span class="attribute">#[derive(Derivative)]
+#[derivative(Clone(bound = <span class="string">&quot;&quot;</span>), Debug(bound = <span class="string">&quot;&quot;</span>))]
+</span><span class="kw">pub struct </span>Client&lt;E&gt; {
+    inner: surf::Client,
+    _marker: std::marker::PhantomData&lt;<span class="kw">fn</span>(E) -&gt; ()&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Error</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Client</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">inner</span>: <span class="ident">surf::Config::new</span>().<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
-            <span class="ident">_marker</span>: <span class="ident">Default::default</span>(),
+<span class="kw">impl</span>&lt;E: Error&gt; Default <span class="kw">for </span>Client&lt;E&gt; {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            inner: surf::Config::new().try_into().unwrap(),
+            _marker: Default::default(),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Error</span><span class="op">&gt;</span> <span class="ident">Client</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Create a client and connect to the Tide Disco server at `base_url`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="kw-2">mut</span> <span class="ident">base_url</span>: <span class="ident">Url</span>) -&gt; <span class="self">Self</span> {
-        <span class="comment">// If the path part of `base_url` does not end in `/`, `join` will treat it as a filename</span>
-        <span class="comment">// and remove it, which is never what we want: `base_url` is _always_ a directory-like path.</span>
-        <span class="comment">// To avoid the annoyance of having every caller add a trailing slash if necessary, we will</span>
-        <span class="comment">// add a trailing slash here if there isn&#39;t one already.</span>
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">base_url</span>.<span class="ident">path</span>().<span class="ident">ends_with</span>(<span class="string">&#39;/&#39;</span>) {
-            <span class="ident">base_url</span>.<span class="ident">set_path</span>(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}/&quot;</span>, <span class="ident">base_url</span>.<span class="ident">path</span>()));
-        }
-
-        <span class="comment">// This `unwrap` can only fail if [surf] is built without the `default-client` feature flag,</span>
-        <span class="comment">// which is a default feature and one we require to build this crate.</span>
-        <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">surf::Config::new</span>()
-            .<span class="ident">set_base_url</span>(<span class="ident">base_url</span>)
-            .<span class="ident">try_into</span>()
-            .<span class="ident">unwrap</span>();
-        <span class="self">Self</span> {
-            <span class="ident">inner</span>,
-            <span class="ident">_marker</span>: <span class="ident">Default::default</span>(),
-        }
+<span class="kw">impl</span>&lt;E: Error&gt; Client&lt;E&gt; {
+    <span class="doccomment">/// Create a client and connect to the Tide Disco server at `base_url`.
+    </span><span class="kw">pub fn </span>new(base_url: Url) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::builder(base_url).build()
     }
 
-    <span class="doccomment">/// Connect to the server, retrying if the server is not running.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// It is not necessary to call this function when creating a new client. The client will</span>
-    <span class="doccomment">/// automatically connect when a request is made, if the server is available. However, this can</span>
-    <span class="doccomment">/// be useful to wait for the server to come up, if the server may be offline when the client is</span>
-    <span class="doccomment">/// created.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This function will make an HTTP `GET` request to the server&#39;s `/healthcheck` endpoint, to</span>
-    <span class="doccomment">/// test if the server is available. If this request succeeds, [connect](Self::connect) returns</span>
-    <span class="doccomment">/// `true`. Otherwise, the client will continue retrying `/healthcheck` requests until `timeout`</span>
-    <span class="doccomment">/// has elapsed (or forever, if `timeout` is `None`). If the timeout expires before a</span>
-    <span class="doccomment">/// `/healthcheck` request succeeds, [connect](Self::connect) will return `false`.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">connect</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">timeout</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">timeout</span> <span class="op">=</span> <span class="ident">timeout</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">d</span><span class="op">|</span> <span class="ident">Instant::now</span>() <span class="op">+</span> <span class="ident">d</span>);
-        <span class="kw">while</span> <span class="ident">timeout</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">t</span><span class="op">|</span> <span class="ident">Instant::now</span>() <span class="op">&lt;</span> <span class="ident">t</span>).<span class="ident">unwrap_or</span>(<span class="bool-val">true</span>) {
-            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">get</span>(<span class="string">&quot;/healthcheck&quot;</span>).<span class="ident">send</span>().<span class="kw">await</span> {
-                <span class="prelude-val">Ok</span>(<span class="ident">res</span>) <span class="kw">if</span> <span class="ident">res</span>.<span class="ident">status</span>() <span class="op">==</span> <span class="ident">StatusCode::Ok</span> =&gt; <span class="kw">return</span> <span class="bool-val">true</span>,
-                <span class="kw">_</span> =&gt; <span class="ident">sleep</span>(<span class="ident">Duration::from_secs</span>(<span class="number">10</span>)).<span class="kw">await</span>,
+    <span class="doccomment">/// Create a client with customization.
+    </span><span class="kw">pub fn </span>builder(base_url: Url) -&gt; ClientBuilder&lt;E&gt; {
+        ClientBuilder::new(base_url)
+    }
+
+    <span class="doccomment">/// Connect to the server, retrying if the server is not running.
+    ///
+    /// It is not necessary to call this function when creating a new client. The client will
+    /// automatically connect when a request is made, if the server is available. However, this can
+    /// be useful to wait for the server to come up, if the server may be offline when the client is
+    /// created.
+    ///
+    /// This function will make an HTTP `GET` request to the server&#39;s `/healthcheck` endpoint, to
+    /// test if the server is available. If this request succeeds, [connect](Self::connect) returns
+    /// `true`. Otherwise, the client will continue retrying `/healthcheck` requests until `timeout`
+    /// has elapsed (or forever, if `timeout` is `None`). If the timeout expires before a
+    /// `/healthcheck` request succeeds, [connect](Self::connect) will return `false`.
+    </span><span class="kw">pub async fn </span>connect(<span class="kw-2">&amp;</span><span class="self">self</span>, timeout: <span class="prelude-ty">Option</span>&lt;Duration&gt;) -&gt; bool {
+        <span class="kw">let </span>timeout = timeout.map(|d| Instant::now() + d);
+        <span class="kw">while </span>timeout.map(|t| Instant::now() &lt; t).unwrap_or(<span class="bool-val">true</span>) {
+            <span class="kw">match </span><span class="self">self</span>.inner.get(<span class="string">&quot;/healthcheck&quot;</span>).send().<span class="kw">await </span>{
+                <span class="prelude-val">Ok</span>(res) <span class="kw">if </span>res.status() == StatusCode::Ok =&gt; <span class="kw">return </span><span class="bool-val">true</span>,
+                <span class="kw">_ </span>=&gt; sleep(Duration::from_secs(<span class="number">10</span>)).<span class="kw">await</span>,
             }
         }
-        <span class="bool-val">false</span>
-    }
+        <span class="bool-val">false
+    </span>}
 
-    <span class="doccomment">/// Connect to the server, retrying until the server is `healthy`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This function is similar to [connect](Self::connect). It will make requests to the</span>
-    <span class="doccomment">/// `/healthcheck` endpoint until a request succeeds. However, it will then continue retrying</span>
-    <span class="doccomment">/// until the response from `/healthcheck` satisfies the `healthy` predicate.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// On success, returns the response from `/healthcheck`. On timeout, returns `None`.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">wait_for_health</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">DeserializeOwned</span> <span class="op">+</span> <span class="ident">HealthCheck</span><span class="op">&gt;</span>(
+    <span class="doccomment">/// Connect to the server, retrying until the server is `healthy`.
+    ///
+    /// This function is similar to [connect](Self::connect). It will make requests to the
+    /// `/healthcheck` endpoint until a request succeeds. However, it will then continue retrying
+    /// until the response from `/healthcheck` satisfies the `healthy` predicate.
+    ///
+    /// On success, returns the response from `/healthcheck`. On timeout, returns `None`.
+    </span><span class="kw">pub async fn </span>wait_for_health&lt;H: DeserializeOwned + HealthCheck&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">healthy</span>: <span class="kw">impl</span> <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">H</span>) -&gt; <span class="ident">bool</span>,
-        <span class="ident">timeout</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Duration</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">timeout</span> <span class="op">=</span> <span class="ident">timeout</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">d</span><span class="op">|</span> <span class="ident">Instant::now</span>() <span class="op">+</span> <span class="ident">d</span>);
-        <span class="kw">while</span> <span class="ident">timeout</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">t</span><span class="op">|</span> <span class="ident">Instant::now</span>() <span class="op">&lt;</span> <span class="ident">t</span>).<span class="ident">unwrap_or</span>(<span class="bool-val">true</span>) {
-            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">healthcheck</span>::<span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>().<span class="kw">await</span> {
-                <span class="prelude-val">Ok</span>(<span class="ident">health</span>) <span class="kw">if</span> <span class="ident">healthy</span>(<span class="kw-2">&amp;</span><span class="ident">health</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">health</span>),
-                <span class="kw">_</span> =&gt; <span class="ident">sleep</span>(<span class="ident">Duration::from_secs</span>(<span class="number">10</span>)).<span class="kw">await</span>,
+        healthy: <span class="kw">impl </span>Fn(<span class="kw-2">&amp;</span>H) -&gt; bool,
+        timeout: <span class="prelude-ty">Option</span>&lt;Duration&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;H&gt; {
+        <span class="kw">let </span>timeout = timeout.map(|d| Instant::now() + d);
+        <span class="kw">while </span>timeout.map(|t| Instant::now() &lt; t).unwrap_or(<span class="bool-val">true</span>) {
+            <span class="kw">match </span><span class="self">self</span>.healthcheck::&lt;H&gt;().<span class="kw">await </span>{
+                <span class="prelude-val">Ok</span>(health) <span class="kw">if </span>healthy(<span class="kw-2">&amp;</span>health) =&gt; <span class="kw">return </span><span class="prelude-val">Some</span>(health),
+                <span class="kw">_ </span>=&gt; sleep(Duration::from_secs(<span class="number">10</span>)).<span class="kw">await</span>,
             }
         }
-        <span class="prelude-val">None</span>
+        <span class="prelude-val">None
+    </span>}
+
+    <span class="doccomment">/// Build an HTTP `GET` request.
+    </span><span class="kw">pub fn </span>get&lt;T: DeserializeOwned&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, route: <span class="kw-2">&amp;</span>str) -&gt; Request&lt;T, E&gt; {
+        <span class="self">self</span>.request(Method::Get, route)
     }
 
-    <span class="doccomment">/// Build an HTTP `GET` request.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">DeserializeOwned</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">route</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">E</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">request</span>(<span class="ident">Method::Get</span>, <span class="ident">route</span>)
+    <span class="doccomment">/// Build an HTTP `POST` request.
+    </span><span class="kw">pub fn </span>post&lt;T: DeserializeOwned&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, route: <span class="kw-2">&amp;</span>str) -&gt; Request&lt;T, E&gt; {
+        <span class="self">self</span>.request(Method::Post, route)
     }
 
-    <span class="doccomment">/// Build an HTTP `POST` request.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">post</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">DeserializeOwned</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">route</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">E</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">request</span>(<span class="ident">Method::Post</span>, <span class="ident">route</span>)
+    <span class="doccomment">/// Query the server&#39;s healthcheck endpoint.
+    </span><span class="kw">pub async fn </span>healthcheck&lt;H: DeserializeOwned + HealthCheck&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;H, E&gt; {
+        <span class="self">self</span>.get(<span class="string">&quot;healthcheck&quot;</span>).send().<span class="kw">await
+    </span>}
+
+    <span class="doccomment">/// Build an HTTP request with the specified method.
+    </span><span class="kw">pub fn </span>request&lt;T: DeserializeOwned&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, method: Method, route: <span class="kw-2">&amp;</span>str) -&gt; Request&lt;T, E&gt; {
+        <span class="kw">let </span>req: Request&lt;T, E&gt; = <span class="self">self</span>.inner.request(method, route).into();
+        <span class="comment">// By default, request binary content from the server, as this is the most compact format
+        // supported by all Tide Disco applications.
+        </span>req.header(ACCEPT, <span class="string">&quot;application/octet-stream&quot;</span>)
     }
 
-    <span class="doccomment">/// Query the server&#39;s healthcheck endpoint.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">healthcheck</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">DeserializeOwned</span> <span class="op">+</span> <span class="ident">HealthCheck</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">H</span>, <span class="ident">E</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get</span>(<span class="string">&quot;healthcheck&quot;</span>).<span class="ident">send</span>().<span class="kw">await</span>
+    <span class="doccomment">/// Build a streaming connection request.
+    ///
+    /// # Panics
+    ///
+    /// This will panic if a malformed URL is passed.
+    </span><span class="kw">pub fn </span>socket(<span class="kw-2">&amp;</span><span class="self">self</span>, route: <span class="kw-2">&amp;</span>str) -&gt; SocketRequest&lt;E&gt; {
+        <span class="self">self</span>.inner
+            .config()
+            .base_url
+            .as_ref()
+            .unwrap()
+            .join(route)
+            .unwrap()
+            .into()
     }
 
-    <span class="doccomment">/// Build an HTTP request with the specified method.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">request</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">DeserializeOwned</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">method</span>: <span class="ident">Method</span>, <span class="ident">route</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">E</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">req</span>: <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">E</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">request</span>(<span class="ident">method</span>, <span class="ident">route</span>).<span class="ident">into</span>();
-        <span class="comment">// By default, request binary content from the server, as this is the most compact format</span>
-        <span class="comment">// supported by all Tide Disco applications.</span>
-        <span class="ident">req</span>.<span class="ident">header</span>(<span class="ident">ACCEPT</span>, <span class="string">&quot;application/octet-stream&quot;</span>)
-    }
-
-    <span class="doccomment">/// Build a streaming connection request.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Panics</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This will panic if a malformed URL is passed.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">socket</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">route</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">SocketRequest</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>
-            .<span class="ident">config</span>()
-            .<span class="ident">base_url</span>
-            .<span class="ident">as_ref</span>()
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">join</span>(<span class="ident">route</span>)
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">into</span>()
-    }
-
-    <span class="doccomment">/// Create a client for a sub-module of the connected application.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">module</span><span class="op">&lt;</span><span class="ident">ModError</span>: <span class="ident">Error</span><span class="op">&gt;</span>(
+    <span class="doccomment">/// Create a client for a sub-module of the connected application.
+    </span><span class="kw">pub fn </span>module&lt;ModError: Error&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">prefix</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Client</span><span class="op">&lt;</span><span class="ident">ModError</span><span class="op">&gt;</span>, <span class="ident">http::url::ParseError</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">Client::new</span>(
-            <span class="self">self</span>.<span class="ident">inner</span>
-                .<span class="ident">config</span>()
-                .<span class="ident">base_url</span>
-                .<span class="ident">as_ref</span>()
-                .<span class="ident">unwrap</span>()
-                .<span class="ident">join</span>(<span class="ident">prefix</span>)<span class="question-mark">?</span>,
+        prefix: <span class="kw-2">&amp;</span>str,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Client&lt;ModError&gt;, http::url::ParseError&gt; {
+        <span class="prelude-val">Ok</span>(Client::new(
+            <span class="self">self</span>.inner
+                .config()
+                .base_url
+                .as_ref()
+                .unwrap()
+                .join(prefix)<span class="question-mark">?</span>,
         ))
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="ident">async_std</span>::{<span class="ident">sync::RwLock</span>, <span class="ident">task::spawn</span>};
-    <span class="kw">use</span> <span class="ident">futures</span>::{<span class="ident">stream::iter</span>, <span class="ident">FutureExt</span>, <span class="ident">SinkExt</span>, <span class="ident">StreamExt</span>};
-    <span class="kw">use</span> <span class="ident">portpicker::pick_unused_port</span>;
-    <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>};
-    <span class="kw">use</span> <span class="ident">tide_disco</span>::{<span class="ident">error::ServerError</span>, <span class="ident">App</span>};
-    <span class="kw">use</span> <span class="ident">toml::toml</span>;
+<span class="doccomment">/// Interface to specify optional configuration values before creating a [Client].
+</span><span class="kw">pub struct </span>ClientBuilder&lt;E: Error&gt; {
+    config: surf::Config,
+    _marker: std::marker::PhantomData&lt;<span class="kw">fn</span>(E) -&gt; ()&gt;,
+}
 
-    <span class="attribute">#[<span class="ident">async_std::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_basic_http_client</span>() {
-        <span class="comment">// Set up a simple Tide Disco app as an example.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">app</span>: <span class="ident">App</span><span class="op">&lt;</span>(), <span class="ident">ServerError</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">App::with_state</span>(());
-        <span class="kw">let</span> <span class="ident">api</span> <span class="op">=</span> <span class="macro">toml!</span> {
-            [<span class="ident">route</span>.<span class="ident">get</span>]
-            <span class="ident">PATH</span> <span class="op">=</span> [<span class="string">&quot;/get&quot;</span>]
-            <span class="ident">METHOD</span> <span class="op">=</span> <span class="string">&quot;GET&quot;</span>
+<span class="kw">impl</span>&lt;E: Error&gt; ClientBuilder&lt;E&gt; {
+    <span class="kw">fn </span>new(<span class="kw-2">mut </span>base_url: Url) -&gt; <span class="self">Self </span>{
+        <span class="comment">// If the path part of `base_url` does not end in `/`, `join` will treat it as a filename
+        // and remove it, which is never what we want: `base_url` is _always_ a directory-like path.
+        // To avoid the annoyance of having every caller add a trailing slash if necessary, we will
+        // add a trailing slash here if there isn&#39;t one already.
+        </span><span class="kw">if </span>!base_url.path().ends_with(<span class="string">&#39;/&#39;</span>) {
+            base_url.set_path(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;{}/&quot;</span>, base_url.path()));
+        }
+        <span class="self">Self </span>{
+            config: surf::Config::new().set_base_url(base_url),
+            _marker: Default::default(),
+        }
+    }
 
-            [<span class="ident">route</span>.<span class="ident">post</span>]
-            <span class="ident">PATH</span> <span class="op">=</span> [<span class="string">&quot;/post&quot;</span>]
-            <span class="ident">METHOD</span> <span class="op">=</span> <span class="string">&quot;POST&quot;</span>
-        };
-        <span class="ident">app</span>.<span class="ident">module</span>::<span class="op">&lt;</span><span class="ident">ServerError</span><span class="op">&gt;</span>(<span class="string">&quot;mod&quot;</span>, <span class="ident">api</span>)
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">get</span>(<span class="string">&quot;get&quot;</span>, <span class="op">|</span><span class="ident">_req</span>, <span class="ident">_state</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> { <span class="prelude-val">Ok</span>(<span class="string">&quot;response&quot;</span>) }.<span class="ident">boxed</span>())
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">post</span>(<span class="string">&quot;post&quot;</span>, <span class="op">|</span><span class="ident">req</span>, <span class="ident">_state</span><span class="op">|</span> {
-                <span class="kw">async</span> <span class="kw">move</span> {
-                    <span class="kw">if</span> <span class="ident">req</span>.<span class="ident">body_auto</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>().<span class="ident">unwrap</span>() <span class="op">==</span> <span class="string">&quot;body&quot;</span> {
+    <span class="doccomment">/// Set connection timeout duration.
+    ///
+    /// Passing `None` will remove the timeout.
+    ///
+    /// Default: `Some(Duration::from_secs(60))`.
+    </span><span class="kw">pub fn </span>set_timeout(<span class="kw-2">mut </span><span class="self">self</span>, timeout: <span class="prelude-ty">Option</span>&lt;Duration&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.config = <span class="self">self</span>.config.set_timeout(timeout);
+        <span class="self">self
+    </span>}
+
+    <span class="doccomment">/// Create a [Client] with the settings specified in this builder.
+    </span><span class="kw">pub fn </span>build(<span class="self">self</span>) -&gt; Client&lt;E&gt; {
+        <span class="comment">// This `unwrap` can only fail if [surf] is built without the `default-client` feature flag,
+        // which is a default feature and one we require to build this crate.
+        </span><span class="kw">let </span>inner = <span class="self">self</span>.config.try_into().unwrap();
+        Client {
+            inner,
+            _marker: Default::default(),
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;E: Error&gt; From&lt;ClientBuilder&lt;E&gt;&gt; <span class="kw">for </span>Client&lt;E&gt; {
+    <span class="kw">fn </span>from(builder: ClientBuilder&lt;E&gt;) -&gt; <span class="self">Self </span>{
+        builder.build()
+    }
+}
+
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>test {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>async_std::{sync::RwLock, task::spawn};
+    <span class="kw">use </span>futures::{stream::iter, FutureExt, SinkExt, StreamExt};
+    <span class="kw">use </span>portpicker::pick_unused_port;
+    <span class="kw">use </span>serde::{Deserialize, Serialize};
+    <span class="kw">use </span>tide_disco::{error::ServerError, App};
+    <span class="kw">use </span>toml::toml;
+
+    <span class="attribute">#[async_std::test]
+    </span><span class="kw">async fn </span>test_basic_http_client() {
+        <span class="comment">// Set up a simple Tide Disco app as an example.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>app: App&lt;(), ServerError&gt; = App::with_state(());
+        <span class="kw">let </span>api = <span class="macro">toml! </span>{
+            [route.get]
+            PATH = [<span class="string">&quot;/get&quot;</span>]
+            METHOD = <span class="string">&quot;GET&quot;
+
+            </span>[route.post]
+            PATH = [<span class="string">&quot;/post&quot;</span>]
+            METHOD = <span class="string">&quot;POST&quot;
+        </span>};
+        app.module::&lt;ServerError&gt;(<span class="string">&quot;mod&quot;</span>, api)
+            .unwrap()
+            .get(<span class="string">&quot;get&quot;</span>, |_req, _state| <span class="kw">async move </span>{ <span class="prelude-val">Ok</span>(<span class="string">&quot;response&quot;</span>) }.boxed())
+            .unwrap()
+            .post(<span class="string">&quot;post&quot;</span>, |req, _state| {
+                <span class="kw">async move </span>{
+                    <span class="kw">if </span>req.body_auto::&lt;String&gt;().unwrap() == <span class="string">&quot;body&quot; </span>{
                         <span class="prelude-val">Ok</span>(<span class="string">&quot;response&quot;</span>)
-                    } <span class="kw">else</span> {
-                        <span class="prelude-val">Err</span>(<span class="ident">ServerError::catch_all</span>(
-                            <span class="ident">StatusCode::BadRequest</span>,
-                            <span class="string">&quot;invalid body&quot;</span>.<span class="ident">into</span>(),
+                    } <span class="kw">else </span>{
+                        <span class="prelude-val">Err</span>(ServerError::catch_all(
+                            StatusCode::BadRequest,
+                            <span class="string">&quot;invalid body&quot;</span>.into(),
                         ))
                     }
                 }
-                .<span class="ident">boxed</span>()
+                .boxed()
             })
-            .<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">port</span> <span class="op">=</span> <span class="ident">pick_unused_port</span>().<span class="ident">unwrap</span>();
-        <span class="ident">spawn</span>(<span class="ident">app</span>.<span class="ident">serve</span>(<span class="macro">format!</span>(<span class="string">&quot;0.0.0.0:{}&quot;</span>, <span class="ident">port</span>)));
+            .unwrap();
+        <span class="kw">let </span>port = pick_unused_port().unwrap();
+        spawn(app.serve(<span class="macro">format!</span>(<span class="string">&quot;0.0.0.0:{}&quot;</span>, port)));
 
-        <span class="comment">// Connect a client.</span>
-        <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span>
-            <span class="ident">Client</span>::<span class="op">&lt;</span><span class="ident">ServerError</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="macro">format!</span>(<span class="string">&quot;http://localhost:{}&quot;</span>, <span class="ident">port</span>).<span class="ident">parse</span>().<span class="ident">unwrap</span>());
-        <span class="macro">assert!</span>(<span class="ident">client</span>.<span class="ident">connect</span>(<span class="prelude-val">None</span>).<span class="kw">await</span>);
+        <span class="comment">// Connect a client.
+        </span><span class="kw">let </span>client =
+            Client::&lt;ServerError&gt;::new(<span class="macro">format!</span>(<span class="string">&quot;http://localhost:{}&quot;</span>, port).parse().unwrap());
+        <span class="macro">assert!</span>(client.connect(<span class="prelude-val">None</span>).<span class="kw">await</span>);
 
-        <span class="comment">// Test a couple of basic requests.</span>
+        <span class="comment">// Test a couple of basic requests.
+        </span><span class="macro">assert_eq!</span>(
+            client.get::&lt;String&gt;(<span class="string">&quot;mod/get&quot;</span>).send().<span class="kw">await</span>.unwrap(),
+            <span class="string">&quot;response&quot;
+        </span>);
         <span class="macro">assert_eq!</span>(
-            <span class="ident">client</span>.<span class="ident">get</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>(<span class="string">&quot;mod/get&quot;</span>).<span class="ident">send</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>(),
-            <span class="string">&quot;response&quot;</span>
-        );
-        <span class="macro">assert_eq!</span>(
-            <span class="ident">client</span>
-                .<span class="ident">post</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>(<span class="string">&quot;mod/post&quot;</span>)
-                .<span class="ident">body_json</span>(<span class="kw-2">&amp;</span><span class="string">&quot;body&quot;</span>.<span class="ident">to_string</span>())
-                .<span class="ident">unwrap</span>()
-                .<span class="ident">send</span>()
-                .<span class="kw">await</span>
-                .<span class="ident">unwrap</span>(),
-            <span class="string">&quot;response&quot;</span>
-        );
+            client
+                .post::&lt;String&gt;(<span class="string">&quot;mod/post&quot;</span>)
+                .body_json(<span class="kw-2">&amp;</span><span class="string">&quot;body&quot;</span>.to_string())
+                .unwrap()
+                .send()
+                .<span class="kw">await
+                </span>.unwrap(),
+            <span class="string">&quot;response&quot;
+        </span>);
 
-        <span class="comment">// Test an error response.</span>
-        <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">client</span>
-            .<span class="ident">post</span>::<span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>(<span class="string">&quot;mod/post&quot;</span>)
-            .<span class="ident">body_json</span>(<span class="kw-2">&amp;</span><span class="string">&quot;bad&quot;</span>.<span class="ident">to_string</span>())
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">send</span>()
-            .<span class="kw">await</span>
-            .<span class="ident">unwrap_err</span>();
-        <span class="kw">if</span> <span class="ident">err</span>.<span class="ident">status</span> <span class="op">!</span><span class="op">=</span> <span class="ident">StatusCode::BadRequest</span> <span class="op">|</span><span class="op">|</span> <span class="ident">err</span>.<span class="ident">message</span> <span class="op">!</span><span class="op">=</span> <span class="string">&quot;invalid body&quot;</span> {
-            <span class="macro">panic!</span>(<span class="string">&quot;unexpected error {}&quot;</span>, <span class="ident">err</span>);
+        <span class="comment">// Test an error response.
+        </span><span class="kw">let </span>err = client
+            .post::&lt;String&gt;(<span class="string">&quot;mod/post&quot;</span>)
+            .body_json(<span class="kw-2">&amp;</span><span class="string">&quot;bad&quot;</span>.to_string())
+            .unwrap()
+            .send()
+            .<span class="kw">await
+            </span>.unwrap_err();
+        <span class="kw">if </span>err.status != StatusCode::BadRequest || err.message != <span class="string">&quot;invalid body&quot; </span>{
+            <span class="macro">panic!</span>(<span class="string">&quot;unexpected error {}&quot;</span>, err);
         }
     }
 
-    <span class="attribute">#[<span class="ident">async_std::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_streaming_client</span>() {
-        <span class="comment">// Set up a simple Tide Disco app as an example.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">app</span>: <span class="ident">App</span><span class="op">&lt;</span>(), <span class="ident">ServerError</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">App::with_state</span>(());
-        <span class="kw">let</span> <span class="ident">api</span> <span class="op">=</span> <span class="macro">toml!</span> {
-            [<span class="ident">route</span>.<span class="ident">echo</span>]
-            <span class="ident">PATH</span> <span class="op">=</span> [<span class="string">&quot;/echo&quot;</span>]
-            <span class="ident">METHOD</span> <span class="op">=</span> <span class="string">&quot;SOCKET&quot;</span>
+    <span class="attribute">#[async_std::test]
+    </span><span class="kw">async fn </span>test_streaming_client() {
+        <span class="comment">// Set up a simple Tide Disco app as an example.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>app: App&lt;(), ServerError&gt; = App::with_state(());
+        <span class="kw">let </span>api = <span class="macro">toml! </span>{
+            [route.echo]
+            PATH = [<span class="string">&quot;/echo&quot;</span>]
+            METHOD = <span class="string">&quot;SOCKET&quot;
 
-            [<span class="ident">route</span>.<span class="ident">naturals</span>]
-            <span class="ident">PATH</span> <span class="op">=</span> [<span class="string">&quot;/naturals/:max&quot;</span>]
-            <span class="ident">METHOD</span> <span class="op">=</span> <span class="string">&quot;SOCKET&quot;</span>
-            <span class="string">&quot;:max&quot;</span> <span class="op">=</span> <span class="string">&quot;Integer&quot;</span>
-        };
-        <span class="ident">app</span>.<span class="ident">module</span>::<span class="op">&lt;</span><span class="ident">ServerError</span><span class="op">&gt;</span>(<span class="string">&quot;mod&quot;</span>, <span class="ident">api</span>)
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">socket</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>(<span class="string">&quot;echo&quot;</span>, <span class="op">|</span><span class="ident">_req</span>, <span class="kw-2">mut</span> <span class="ident">conn</span>, <span class="ident">_state</span><span class="op">|</span> {
-                <span class="kw">async</span> <span class="kw">move</span> {
-                    <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(<span class="ident">msg</span>)) <span class="op">=</span> <span class="ident">conn</span>.<span class="ident">next</span>().<span class="kw">await</span> {
-                        <span class="ident">conn</span>.<span class="ident">send</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+            </span>[route.naturals]
+            PATH = [<span class="string">&quot;/naturals/:max&quot;</span>]
+            METHOD = <span class="string">&quot;SOCKET&quot;
+            &quot;:max&quot; </span>= <span class="string">&quot;Integer&quot;
+        </span>};
+        app.module::&lt;ServerError&gt;(<span class="string">&quot;mod&quot;</span>, api)
+            .unwrap()
+            .socket::&lt;<span class="kw">_</span>, String, String&gt;(<span class="string">&quot;echo&quot;</span>, |_req, <span class="kw-2">mut </span>conn, _state| {
+                <span class="kw">async move </span>{
+                    <span class="kw">while let </span><span class="prelude-val">Some</span>(<span class="prelude-val">Ok</span>(msg)) = conn.next().<span class="kw">await </span>{
+                        conn.send(<span class="kw-2">&amp;</span>msg).<span class="kw">await</span>.unwrap();
                     }
                     <span class="prelude-val">Ok</span>(())
                 }
-                .<span class="ident">boxed</span>()
+                .boxed()
             })
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">stream</span>(<span class="string">&quot;naturals&quot;</span>, <span class="op">|</span><span class="ident">req</span>, <span class="ident">_state</span><span class="op">|</span> {
-                <span class="ident">iter</span>(<span class="number">0</span>..<span class="ident">req</span>.<span class="ident">integer_param</span>(<span class="string">&quot;max&quot;</span>).<span class="ident">unwrap</span>()).<span class="ident">map</span>(<span class="prelude-val">Ok</span>).<span class="ident">boxed</span>()
+            .unwrap()
+            .stream(<span class="string">&quot;naturals&quot;</span>, |req, _state| {
+                iter(<span class="number">0</span>..req.integer_param(<span class="string">&quot;max&quot;</span>).unwrap()).map(<span class="prelude-val">Ok</span>).boxed()
             })
-            .<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">port</span> <span class="op">=</span> <span class="ident">pick_unused_port</span>().<span class="ident">unwrap</span>();
-        <span class="ident">spawn</span>(<span class="ident">app</span>.<span class="ident">serve</span>(<span class="macro">format!</span>(<span class="string">&quot;0.0.0.0:{}&quot;</span>, <span class="ident">port</span>)));
+            .unwrap();
+        <span class="kw">let </span>port = pick_unused_port().unwrap();
+        spawn(app.serve(<span class="macro">format!</span>(<span class="string">&quot;0.0.0.0:{}&quot;</span>, port)));
 
-        <span class="comment">// Connect a client.</span>
-        <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span>
-            <span class="ident">Client</span>::<span class="op">&lt;</span><span class="ident">ServerError</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="macro">format!</span>(<span class="string">&quot;http://localhost:{}&quot;</span>, <span class="ident">port</span>).<span class="ident">parse</span>().<span class="ident">unwrap</span>());
-        <span class="macro">assert!</span>(<span class="ident">client</span>.<span class="ident">connect</span>(<span class="prelude-val">None</span>).<span class="kw">await</span>);
+        <span class="comment">// Connect a client.
+        </span><span class="kw">let </span>client =
+            Client::&lt;ServerError&gt;::new(<span class="macro">format!</span>(<span class="string">&quot;http://localhost:{}&quot;</span>, port).parse().unwrap());
+        <span class="macro">assert!</span>(client.connect(<span class="prelude-val">None</span>).<span class="kw">await</span>);
 
-        <span class="comment">// Test a bidirectional endpoint.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">conn</span> <span class="op">=</span> <span class="ident">client</span>
-            .<span class="ident">socket</span>(<span class="string">&quot;mod/echo&quot;</span>)
-            .<span class="ident">connect</span>::<span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">String</span><span class="op">&gt;</span>()
-            .<span class="kw">await</span>
-            .<span class="ident">unwrap</span>();
-        <span class="ident">conn</span>.<span class="ident">send</span>(<span class="kw-2">&amp;</span><span class="string">&quot;foo&quot;</span>.<span class="ident">into</span>()).<span class="kw">await</span>.<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">conn</span>.<span class="ident">next</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">unwrap</span>(), <span class="string">&quot;foo&quot;</span>);
-        <span class="ident">conn</span>.<span class="ident">send</span>(<span class="kw-2">&amp;</span><span class="string">&quot;bar&quot;</span>.<span class="ident">into</span>()).<span class="kw">await</span>.<span class="ident">unwrap</span>();
-        <span class="macro">assert_eq!</span>(<span class="ident">conn</span>.<span class="ident">next</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>().<span class="ident">unwrap</span>(), <span class="string">&quot;bar&quot;</span>);
+        <span class="comment">// Test a bidirectional endpoint.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>conn = client
+            .socket(<span class="string">&quot;mod/echo&quot;</span>)
+            .connect::&lt;String, String&gt;()
+            .<span class="kw">await
+            </span>.unwrap();
+        conn.send(<span class="kw-2">&amp;</span><span class="string">&quot;foo&quot;</span>.into()).<span class="kw">await</span>.unwrap();
+        <span class="macro">assert_eq!</span>(conn.next().<span class="kw">await</span>.unwrap().unwrap(), <span class="string">&quot;foo&quot;</span>);
+        conn.send(<span class="kw-2">&amp;</span><span class="string">&quot;bar&quot;</span>.into()).<span class="kw">await</span>.unwrap();
+        <span class="macro">assert_eq!</span>(conn.next().<span class="kw">await</span>.unwrap().unwrap(), <span class="string">&quot;bar&quot;</span>);
 
-        <span class="comment">// Test a streaming endpoint.</span>
-        <span class="macro">assert_eq!</span>(
-            <span class="ident">client</span>
-                .<span class="ident">socket</span>(<span class="string">&quot;mod/naturals/10&quot;</span>)
-                .<span class="ident">subscribe</span>::<span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>()
-                .<span class="kw">await</span>
-                .<span class="ident">unwrap</span>()
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+        <span class="comment">// Test a streaming endpoint.
+        </span><span class="macro">assert_eq!</span>(
+            client
+                .socket(<span class="string">&quot;mod/naturals/10&quot;</span>)
+                .subscribe::&lt;u64&gt;()
+                .<span class="kw">await
+                </span>.unwrap()
+                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
                 .<span class="kw">await</span>,
-            (<span class="number">0</span>..<span class="number">10</span>).<span class="ident">map</span>(<span class="prelude-val">Ok</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+            (<span class="number">0</span>..<span class="number">10</span>).map(<span class="prelude-val">Ok</span>).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
         );
     }
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Deserialize</span>, <span class="ident">Serialize</span>)]</span>
-    <span class="kw">enum</span> <span class="ident">HealthCheck</span> {
-        <span class="ident">Ready</span>,
-        <span class="ident">Initializing</span>,
+    <span class="attribute">#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]
+    </span><span class="kw">enum </span>HealthCheck {
+        Ready,
+        Initializing,
     }
 
-    <span class="kw">impl</span> <span class="ident"><span class="kw">super</span>::HealthCheck</span> <span class="kw">for</span> <span class="ident">HealthCheck</span> {
-        <span class="kw">fn</span> <span class="ident">status</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">StatusCode</span> {
-            <span class="ident">StatusCode::Ok</span>
+    <span class="kw">impl </span><span class="kw">super</span>::HealthCheck <span class="kw">for </span>HealthCheck {
+        <span class="kw">fn </span>status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; StatusCode {
+            StatusCode::Ok
         }
     }
 
-    <span class="attribute">#[<span class="ident">async_std::test</span>]</span>
-    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">test_healthcheck</span>() {
-        <span class="comment">// Set up a simple Tide Disco app as an example.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">app</span>: <span class="ident">App</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">ServerError</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">App::with_state</span>(<span class="ident">RwLock::new</span>(<span class="ident">HealthCheck::Initializing</span>));
-        <span class="kw">let</span> <span class="ident">api</span> <span class="op">=</span> <span class="macro">toml!</span> {
-            [<span class="ident">route</span>.<span class="ident">init</span>]
-            <span class="ident">PATH</span> <span class="op">=</span> [<span class="string">&quot;/init&quot;</span>]
-            <span class="ident">METHOD</span> <span class="op">=</span> <span class="string">&quot;POST&quot;</span>
-        };
-        <span class="ident">app</span>.<span class="ident">module</span>::<span class="op">&lt;</span><span class="ident">ServerError</span><span class="op">&gt;</span>(<span class="string">&quot;mod&quot;</span>, <span class="ident">api</span>)
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">with_health_check</span>(<span class="op">|</span><span class="ident">state</span><span class="op">|</span> <span class="kw">async</span> <span class="kw">move</span> { <span class="kw-2">*</span><span class="ident">state</span>.<span class="ident">read</span>().<span class="kw">await</span> }.<span class="ident">boxed</span>())
-            .<span class="ident">post</span>(<span class="string">&quot;init&quot;</span>, <span class="op">|</span><span class="kw">_</span>, <span class="ident">state</span><span class="op">|</span> {
-                <span class="kw">async</span> <span class="kw">move</span> {
-                    <span class="kw-2">*</span><span class="ident">state</span> <span class="op">=</span> <span class="ident">HealthCheck::Ready</span>;
+    <span class="attribute">#[async_std::test]
+    </span><span class="kw">async fn </span>test_healthcheck() {
+        <span class="comment">// Set up a simple Tide Disco app as an example.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>app: App&lt;<span class="kw">_</span>, ServerError&gt; = App::with_state(RwLock::new(HealthCheck::Initializing));
+        <span class="kw">let </span>api = <span class="macro">toml! </span>{
+            [route.init]
+            PATH = [<span class="string">&quot;/init&quot;</span>]
+            METHOD = <span class="string">&quot;POST&quot;
+        </span>};
+        app.module::&lt;ServerError&gt;(<span class="string">&quot;mod&quot;</span>, api)
+            .unwrap()
+            .with_health_check(|state| <span class="kw">async move </span>{ <span class="kw-2">*</span>state.read().<span class="kw">await </span>}.boxed())
+            .post(<span class="string">&quot;init&quot;</span>, |<span class="kw">_</span>, state| {
+                <span class="kw">async move </span>{
+                    <span class="kw-2">*</span>state = HealthCheck::Ready;
                     <span class="prelude-val">Ok</span>(())
                 }
-                .<span class="ident">boxed</span>()
+                .boxed()
             })
-            .<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">port</span> <span class="op">=</span> <span class="ident">pick_unused_port</span>().<span class="ident">unwrap</span>();
-        <span class="ident">spawn</span>(<span class="ident">app</span>.<span class="ident">serve</span>(<span class="macro">format!</span>(<span class="string">&quot;0.0.0.0:{}&quot;</span>, <span class="ident">port</span>)));
+            .unwrap();
+        <span class="kw">let </span>port = pick_unused_port().unwrap();
+        spawn(app.serve(<span class="macro">format!</span>(<span class="string">&quot;0.0.0.0:{}&quot;</span>, port)));
 
-        <span class="comment">// Connect a client.</span>
-        <span class="kw">let</span> <span class="ident">client</span> <span class="op">=</span>
-            <span class="ident">Client</span>::<span class="op">&lt;</span><span class="ident">ServerError</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="macro">format!</span>(<span class="string">&quot;http://localhost:{}/mod&quot;</span>, <span class="ident">port</span>).<span class="ident">parse</span>().<span class="ident">unwrap</span>());
-        <span class="macro">assert!</span>(<span class="ident">client</span>.<span class="ident">connect</span>(<span class="prelude-val">None</span>).<span class="kw">await</span>);
+        <span class="comment">// Connect a client.
+        </span><span class="kw">let </span>client =
+            Client::&lt;ServerError&gt;::new(<span class="macro">format!</span>(<span class="string">&quot;http://localhost:{}/mod&quot;</span>, port).parse().unwrap());
+        <span class="macro">assert!</span>(client.connect(<span class="prelude-val">None</span>).<span class="kw">await</span>);
         <span class="macro">assert_eq!</span>(
-            <span class="ident">HealthCheck::Initializing</span>,
-            <span class="ident">client</span>.<span class="ident">healthcheck</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>()
+            HealthCheck::Initializing,
+            client.healthcheck().<span class="kw">await</span>.unwrap()
         );
 
-        <span class="comment">// Waiting for [HealthCheck::Ready] should time out.</span>
-        <span class="macro">assert_eq!</span>(
-            <span class="ident">client</span>
-                .<span class="ident">wait_for_health</span>::<span class="op">&lt;</span><span class="ident">HealthCheck</span><span class="op">&gt;</span>(
-                    <span class="op">|</span><span class="ident">h</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">h</span> <span class="op">==</span> <span class="ident">HealthCheck::Ready</span>,
-                    <span class="prelude-val">Some</span>(<span class="ident">Duration::from_secs</span>(<span class="number">1</span>))
+        <span class="comment">// Waiting for [HealthCheck::Ready] should time out.
+        </span><span class="macro">assert_eq!</span>(
+            client
+                .wait_for_health::&lt;HealthCheck&gt;(
+                    |h| <span class="kw-2">*</span>h == HealthCheck::Ready,
+                    <span class="prelude-val">Some</span>(Duration::from_secs(<span class="number">1</span>))
                 )
                 .<span class="kw">await</span>,
-            <span class="prelude-val">None</span>
-        );
+            <span class="prelude-val">None
+        </span>);
 
-        <span class="comment">// Initialize the service.</span>
-        <span class="ident">client</span>.<span class="ident">post</span>::<span class="op">&lt;</span>()<span class="op">&gt;</span>(<span class="string">&quot;init&quot;</span>).<span class="ident">send</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
+        <span class="comment">// Initialize the service.
+        </span>client.post::&lt;()&gt;(<span class="string">&quot;init&quot;</span>).send().<span class="kw">await</span>.unwrap();
 
-        <span class="comment">// Now waiting for [HealthCheck::Ready] should succeed.</span>
-        <span class="macro">assert_eq!</span>(
-            <span class="ident">client</span>
-                .<span class="ident">wait_for_health</span>::<span class="op">&lt;</span><span class="ident">HealthCheck</span><span class="op">&gt;</span>(<span class="op">|</span><span class="ident">h</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">h</span> <span class="op">==</span> <span class="ident">HealthCheck::Ready</span>, <span class="prelude-val">None</span>)
+        <span class="comment">// Now waiting for [HealthCheck::Ready] should succeed.
+        </span><span class="macro">assert_eq!</span>(
+            client
+                .wait_for_health::&lt;HealthCheck&gt;(|h| <span class="kw-2">*</span>h == HealthCheck::Ready, <span class="prelude-val">None</span>)
                 .<span class="kw">await</span>,
-            <span class="prelude-val">Some</span>(<span class="ident">HealthCheck::Ready</span>)
+            <span class="prelude-val">Some</span>(HealthCheck::Ready)
         );
-        <span class="macro">assert_eq!</span>(<span class="ident">HealthCheck::Ready</span>, <span class="ident">client</span>.<span class="ident">healthcheck</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>());
+        <span class="macro">assert_eq!</span>(HealthCheck::Ready, client.healthcheck().<span class="kw">await</span>.unwrap());
+    }
+
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_builder() {
+        <span class="kw">let </span>client = Client::&lt;ServerError&gt;::builder(<span class="string">&quot;http://www.example.com&quot;</span>.parse().unwrap())
+            .set_timeout(<span class="prelude-val">None</span>)
+            .build();
+        <span class="macro">assert_eq!</span>(
+            client.inner.config().base_url,
+            <span class="prelude-val">Some</span>(<span class="string">&quot;http://www.example.com&quot;</span>.parse().unwrap())
+        );
+        <span class="macro">assert_eq!</span>(client.inner.config().http_config.timeout, <span class="prelude-val">None</span>);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="surf_disco" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="surf_disco" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>

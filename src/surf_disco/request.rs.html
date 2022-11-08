@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/request.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>request.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../surf_disco/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../surf_disco/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../surf_disco/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `src/request.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>request.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../surf_disco/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../surf_disco/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../surf_disco/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -177,184 +177,184 @@
 <span id="177">177</span>
 <span id="178">178</span>
 <span id="179">179</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Error</span>, <span class="ident">StatusCode</span>};
-<span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">de::DeserializeOwned</span>, <span class="ident">Serialize</span>};
-<span class="kw">use</span> <span class="ident">std::fmt::Display</span>;
-<span class="kw">use</span> <span class="ident">surf::http::headers</span>::{<span class="ident">HeaderName</span>, <span class="ident">ToHeaderValues</span>};
+</pre><pre class="rust"><code><span class="kw">use crate</span>::{Error, StatusCode};
+<span class="kw">use </span>serde::{de::DeserializeOwned, Serialize};
+<span class="kw">use </span>std::fmt::Display;
+<span class="kw">use </span>surf::http::headers::{HeaderName, ToHeaderValues};
 
-<span class="attribute">#[<span class="ident">must_use</span>]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="ident">inner</span>: <span class="ident">surf::RequestBuilder</span>,
-    <span class="ident">marker</span>: <span class="ident">std::marker::PhantomData</span><span class="op">&lt;</span><span class="kw">fn</span>(<span class="ident">T</span>, <span class="ident">E</span>) -&gt; ()<span class="op">&gt;</span>,
+<span class="attribute">#[must_use]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>Request&lt;T, E&gt; {
+    inner: surf::RequestBuilder,
+    marker: std::marker::PhantomData&lt;<span class="kw">fn</span>(T, E) -&gt; ()&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">E</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">surf::RequestBuilder</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">inner</span>: <span class="ident">surf::RequestBuilder</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">inner</span>,
-            <span class="ident">marker</span>: <span class="ident">Default::default</span>(),
+<span class="kw">impl</span>&lt;T, E&gt; From&lt;surf::RequestBuilder&gt; <span class="kw">for </span>Request&lt;T, E&gt; {
+    <span class="kw">fn </span>from(inner: surf::RequestBuilder) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            inner,
+            marker: Default::default(),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">DeserializeOwned</span>, <span class="ident">E</span>: <span class="ident">Error</span><span class="op">&gt;</span> <span class="ident">Request</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">E</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Set a header on the request.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">header</span>(<span class="self">self</span>, <span class="ident">key</span>: <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">HeaderName</span><span class="op">&gt;</span>, <span class="ident">value</span>: <span class="kw">impl</span> <span class="ident">ToHeaderValues</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">header</span>(<span class="ident">key</span>, <span class="ident">value</span>).<span class="ident">into</span>()
+<span class="kw">impl</span>&lt;T: DeserializeOwned, E: Error&gt; Request&lt;T, E&gt; {
+    <span class="doccomment">/// Set a header on the request.
+    </span><span class="kw">pub fn </span>header(<span class="self">self</span>, key: <span class="kw">impl </span>Into&lt;HeaderName&gt;, value: <span class="kw">impl </span>ToHeaderValues) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.inner.header(key, value).into()
     }
 
-    <span class="doccomment">/// Set the request body using JSON.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Body is serialized using [serde_json] and the `Content-Type` header is set to</span>
-    <span class="doccomment">/// `application/json`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Errors</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Fails if `body` does not serialize successfully.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">body_json</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">Serialize</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">body</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">E</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>
-            .<span class="ident">body_json</span>(<span class="ident">body</span>)
-            .<span class="ident">map</span>(<span class="ident"><span class="self">Self</span>::from</span>)
-            .<span class="ident">map_err</span>(<span class="ident">surf_error</span>)
+    <span class="doccomment">/// Set the request body using JSON.
+    ///
+    /// Body is serialized using [serde_json] and the `Content-Type` header is set to
+    /// `application/json`.
+    ///
+    /// # Errors
+    ///
+    /// Fails if `body` does not serialize successfully.
+    </span><span class="kw">pub fn </span>body_json&lt;B: Serialize&gt;(<span class="self">self</span>, body: <span class="kw-2">&amp;</span>B) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, E&gt; {
+        <span class="self">self</span>.inner
+            .body_json(body)
+            .map(<span class="self">Self</span>::from)
+            .map_err(surf_error)
     }
 
-    <span class="doccomment">/// Set the request body using [bincode].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Body is serialized using [bincode] and the `Content-Type` header is set to</span>
-    <span class="doccomment">/// `application/octet-stream`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Errors</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Fails if `body` does not serialize successfully.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">body_binary</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">Serialize</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">body</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">E</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="self">self</span>
-            .<span class="ident">inner</span>
-            .<span class="ident">body_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">bincode::serialize</span>(<span class="ident">body</span>).<span class="ident">map_err</span>(<span class="ident">request_error</span>)<span class="question-mark">?</span>)
-            .<span class="ident">into</span>())
+    <span class="doccomment">/// Set the request body using [bincode].
+    ///
+    /// Body is serialized using [bincode] and the `Content-Type` header is set to
+    /// `application/octet-stream`.
+    ///
+    /// # Errors
+    ///
+    /// Fails if `body` does not serialize successfully.
+    </span><span class="kw">pub fn </span>body_binary&lt;B: Serialize&gt;(<span class="self">self</span>, body: <span class="kw-2">&amp;</span>B) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, E&gt; {
+        <span class="prelude-val">Ok</span>(<span class="self">self
+            </span>.inner
+            .body_bytes(<span class="kw-2">&amp;</span>bincode::serialize(body).map_err(request_error)<span class="question-mark">?</span>)
+            .into())
     }
 
-    <span class="doccomment">/// Send the request and await a response from the server.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If the request succeeds (receives a response with [StatusCode::Ok]) the response body is</span>
-    <span class="doccomment">/// converted to a `T`, using a format determined by the `Content-Type` header of the request.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Errors</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If the client is unable to reach the server, or if the response body cannot be interpreted</span>
-    <span class="doccomment">/// as a `T`, an error message is created using [catch_all](Error::catch_all) and returned.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If the request completes but the response status code is not [StatusCode::Ok], an error</span>
-    <span class="doccomment">/// message is constructed using the body of the response. If there is a body and it can be</span>
-    <span class="doccomment">/// converted to an `E` using the content type specified in the response&#39;s `Content-Type`</span>
-    <span class="doccomment">/// header, that `E` will be returned directly. Otherwise, an error message is synthesized using</span>
-    <span class="doccomment">/// [catch_all](Error::catch_all) that includes human-readable information about the response.</span>
-    <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">send</span>(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">E</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">send</span>().<span class="kw">await</span>.<span class="ident">map_err</span>(<span class="ident">surf_error</span>)<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="ident">res</span>.<span class="ident">status</span>() <span class="op">==</span> <span class="ident">StatusCode::Ok</span> {
-            <span class="comment">// If the response indicates success, deserialize the body using a format determined by</span>
-            <span class="comment">// the Content-Type header.</span>
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">content_type</span>) <span class="op">=</span> <span class="ident">res</span>.<span class="ident">header</span>(<span class="string">&quot;Content-Type&quot;</span>).<span class="ident">cloned</span>() {
-                <span class="kw">match</span> <span class="ident">content_type</span>.<span class="ident">as_str</span>() {
-                    <span class="string">&quot;application/json&quot;</span> =&gt; <span class="ident">res</span>.<span class="ident">body_json</span>().<span class="kw">await</span>.<span class="ident">map_err</span>(<span class="ident">surf_error</span>),
-                    <span class="string">&quot;application/octet-stream&quot;</span> =&gt; {
-                        <span class="ident">bincode::deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">res</span>.<span class="ident">body_bytes</span>().<span class="kw">await</span>.<span class="ident">map_err</span>(<span class="ident">surf_error</span>)<span class="question-mark">?</span>)
-                            .<span class="ident">map_err</span>(<span class="ident">request_error</span>)
+    <span class="doccomment">/// Send the request and await a response from the server.
+    ///
+    /// If the request succeeds (receives a response with [StatusCode::Ok]) the response body is
+    /// converted to a `T`, using a format determined by the `Content-Type` header of the request.
+    ///
+    /// # Errors
+    ///
+    /// If the client is unable to reach the server, or if the response body cannot be interpreted
+    /// as a `T`, an error message is created using [catch_all](Error::catch_all) and returned.
+    ///
+    /// If the request completes but the response status code is not [StatusCode::Ok], an error
+    /// message is constructed using the body of the response. If there is a body and it can be
+    /// converted to an `E` using the content type specified in the response&#39;s `Content-Type`
+    /// header, that `E` will be returned directly. Otherwise, an error message is synthesized using
+    /// [catch_all](Error::catch_all) that includes human-readable information about the response.
+    </span><span class="kw">pub async fn </span>send(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;T, E&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>res = <span class="self">self</span>.inner.send().<span class="kw">await</span>.map_err(surf_error)<span class="question-mark">?</span>;
+        <span class="kw">if </span>res.status() == StatusCode::Ok {
+            <span class="comment">// If the response indicates success, deserialize the body using a format determined by
+            // the Content-Type header.
+            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(content_type) = res.header(<span class="string">&quot;Content-Type&quot;</span>).cloned() {
+                <span class="kw">match </span>content_type.as_str() {
+                    <span class="string">&quot;application/json&quot; </span>=&gt; res.body_json().<span class="kw">await</span>.map_err(surf_error),
+                    <span class="string">&quot;application/octet-stream&quot; </span>=&gt; {
+                        bincode::deserialize(<span class="kw-2">&amp;</span>res.body_bytes().<span class="kw">await</span>.map_err(surf_error)<span class="question-mark">?</span>)
+                            .map_err(request_error)
                     }
-                    <span class="ident">content_type</span> =&gt; {
-                        <span class="comment">// For help in debugging, include the body with the unexpected content type</span>
-                        <span class="comment">// in the error message.</span>
-                        <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">res</span>.<span class="ident">body_bytes</span>().<span class="kw">await</span> {
-                            <span class="prelude-val">Ok</span>(<span class="ident">bytes</span>) =&gt; <span class="kw">match</span> <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>) {
-                                <span class="prelude-val">Ok</span>(<span class="ident">s</span>) =&gt; <span class="macro">format!</span>(<span class="string">&quot;body: {}&quot;</span>, <span class="ident">s</span>),
-                                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="macro">format!</span>(<span class="string">&quot;body: {}&quot;</span>, <span class="ident">hex::encode</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>)),
+                    content_type =&gt; {
+                        <span class="comment">// For help in debugging, include the body with the unexpected content type
+                        // in the error message.
+                        </span><span class="kw">let </span>msg = <span class="kw">match </span>res.body_bytes().<span class="kw">await </span>{
+                            <span class="prelude-val">Ok</span>(bytes) =&gt; <span class="kw">match </span>std::str::from_utf8(<span class="kw-2">&amp;</span>bytes) {
+                                <span class="prelude-val">Ok</span>(s) =&gt; <span class="macro">format!</span>(<span class="string">&quot;body: {}&quot;</span>, s),
+                                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="macro">format!</span>(<span class="string">&quot;body: {}&quot;</span>, hex::encode(<span class="kw-2">&amp;</span>bytes)),
                             },
-                            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident">String::default</span>(),
+                            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; String::default(),
                         };
-                        <span class="prelude-val">Err</span>(<span class="ident">E::catch_all</span>(
-                            <span class="ident">StatusCode::UnsupportedMediaType</span>,
-                            <span class="macro">format!</span>(<span class="string">&quot;unsupported content type {} {}&quot;</span>, <span class="ident">content_type</span>, <span class="ident">msg</span>),
+                        <span class="prelude-val">Err</span>(E::catch_all(
+                            StatusCode::UnsupportedMediaType,
+                            <span class="macro">format!</span>(<span class="string">&quot;unsupported content type {} {}&quot;</span>, content_type, msg),
                         ))
                     }
                 }
-            } <span class="kw">else</span> {
-                <span class="prelude-val">Err</span>(<span class="ident">E::catch_all</span>(
-                    <span class="ident">StatusCode::UnsupportedMediaType</span>,
-                    <span class="string">&quot;unspecified content type in response&quot;</span>.<span class="ident">into</span>(),
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(E::catch_all(
+                    StatusCode::UnsupportedMediaType,
+                    <span class="string">&quot;unspecified content type in response&quot;</span>.into(),
                 ))
             }
-        } <span class="kw">else</span> {
-            <span class="comment">// To add context to the error, try to interpret the response body as a serialized</span>
-            <span class="comment">// error. Since `body_json`, `body_string`, etc. consume the response body, we will</span>
-            <span class="comment">// extract the body as raw bytes and then try various potential decodings based on the</span>
-            <span class="comment">// response headers and the contents of the body.</span>
-            <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">res</span>.<span class="ident">body_bytes</span>().<span class="kw">await</span> {
-                <span class="prelude-val">Ok</span>(<span class="ident">bytes</span>) =&gt; <span class="ident">bytes</span>,
-                <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
-                    <span class="comment">// If we are unable to even read the body, just return a generic error message</span>
-                    <span class="comment">// based on the status code.</span>
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">E::catch_all</span>(
-                        <span class="ident">res</span>.<span class="ident">status</span>(),
+        } <span class="kw">else </span>{
+            <span class="comment">// To add context to the error, try to interpret the response body as a serialized
+            // error. Since `body_json`, `body_string`, etc. consume the response body, we will
+            // extract the body as raw bytes and then try various potential decodings based on the
+            // response headers and the contents of the body.
+            </span><span class="kw">let </span>bytes = <span class="kw">match </span>res.body_bytes().<span class="kw">await </span>{
+                <span class="prelude-val">Ok</span>(bytes) =&gt; bytes,
+                <span class="prelude-val">Err</span>(err) =&gt; {
+                    <span class="comment">// If we are unable to even read the body, just return a generic error message
+                    // based on the status code.
+                    </span><span class="kw">return </span><span class="prelude-val">Err</span>(E::catch_all(
+                        res.status(),
                         <span class="macro">format!</span>(
                             <span class="string">&quot;Request terminated with error {}. Failed to read request body due to {}&quot;</span>,
-                            <span class="ident">res</span>.<span class="ident">status</span>(),
-                            <span class="ident">err</span>
+                            res.status(),
+                            err
                         ),
                     ));
                 }
             };
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">content_type</span>) <span class="op">=</span> <span class="ident">res</span>.<span class="ident">header</span>(<span class="string">&quot;Content-Type&quot;</span>) {
-                <span class="comment">// If the response specifies a content type, check if it is one of the types we know</span>
-                <span class="comment">// how to deserialize, and if it is, we can then see if it deserializes to an `E`.</span>
-                <span class="kw">match</span> <span class="ident">content_type</span>.<span class="ident">as_str</span>() {
-                    <span class="string">&quot;application/json&quot;</span> =&gt; {
-                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">serde_json::from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>) {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>);
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(content_type) = res.header(<span class="string">&quot;Content-Type&quot;</span>) {
+                <span class="comment">// If the response specifies a content type, check if it is one of the types we know
+                // how to deserialize, and if it is, we can then see if it deserializes to an `E`.
+                </span><span class="kw">match </span>content_type.as_str() {
+                    <span class="string">&quot;application/json&quot; </span>=&gt; {
+                        <span class="kw">if let </span><span class="prelude-val">Ok</span>(err) = serde_json::from_slice(<span class="kw-2">&amp;</span>bytes) {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(err);
                         }
                     }
-                    <span class="string">&quot;application/octet-stream&quot;</span> =&gt; {
-                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">bincode::deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>) {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>);
+                    <span class="string">&quot;application/octet-stream&quot; </span>=&gt; {
+                        <span class="kw">if let </span><span class="prelude-val">Ok</span>(err) = bincode::deserialize(<span class="kw-2">&amp;</span>bytes) {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(err);
                         }
                     }
-                    <span class="kw">_</span> =&gt; {}
+                    <span class="kw">_ </span>=&gt; {}
                 }
             }
-            <span class="comment">// If we get here, then we were not able to interpret the response body as an `E`</span>
-            <span class="comment">// directly. This can be because:</span>
-            <span class="comment">//  * the content type is not supported for deserialization</span>
-            <span class="comment">//  * the content type was unspecified</span>
-            <span class="comment">//  * the body did not deserialize to an `E` We have one thing left we can try: if the</span>
-            <span class="comment">//    body is a string, we can use the `catch_all` variant of `E` to include the</span>
-            <span class="comment">//    contents of the string in the error message.</span>
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">msg</span>) <span class="op">=</span> <span class="ident">std::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>) {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">E::catch_all</span>(<span class="ident">res</span>.<span class="ident">status</span>(), <span class="ident">msg</span>.<span class="ident">to_string</span>()));
+            <span class="comment">// If we get here, then we were not able to interpret the response body as an `E`
+            // directly. This can be because:
+            //  * the content type is not supported for deserialization
+            //  * the content type was unspecified
+            //  * the body did not deserialize to an `E` We have one thing left we can try: if the
+            //    body is a string, we can use the `catch_all` variant of `E` to include the
+            //    contents of the string in the error message.
+            </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(msg) = std::str::from_utf8(<span class="kw-2">&amp;</span>bytes) {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(E::catch_all(res.status(), msg.to_string()));
             }
 
-            <span class="comment">// The response body was not an `E` or a string. Return the most helpful error message</span>
-            <span class="comment">// we can, including the status code, content type, and raw body.</span>
-            <span class="prelude-val">Err</span>(<span class="ident">E::catch_all</span>(
-                <span class="ident">res</span>.<span class="ident">status</span>(),
+            <span class="comment">// The response body was not an `E` or a string. Return the most helpful error message
+            // we can, including the status code, content type, and raw body.
+            </span><span class="prelude-val">Err</span>(E::catch_all(
+                res.status(),
                 <span class="macro">format!</span>(
                     <span class="string">&quot;Request terminated with error {}. Content-Type: {}. Body: 0x{}&quot;</span>,
-                    <span class="ident">res</span>.<span class="ident">status</span>(),
-                    <span class="kw">match</span> <span class="ident">res</span>.<span class="ident">header</span>(<span class="string">&quot;Content-Type&quot;</span>) {
-                        <span class="prelude-val">Some</span>(<span class="ident">content_type</span>) =&gt; <span class="ident">content_type</span>.<span class="ident">as_str</span>(),
-                        <span class="prelude-val">None</span> =&gt; <span class="string">&quot;unspecified&quot;</span>,
+                    res.status(),
+                    <span class="kw">match </span>res.header(<span class="string">&quot;Content-Type&quot;</span>) {
+                        <span class="prelude-val">Some</span>(content_type) =&gt; content_type.as_str(),
+                        <span class="prelude-val">None </span>=&gt; <span class="string">&quot;unspecified&quot;</span>,
                     },
-                    <span class="ident">hex::encode</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>)
+                    hex::encode(<span class="kw-2">&amp;</span>bytes)
                 ),
             ))
         }
     }
 }
 
-<span class="kw">fn</span> <span class="ident">request_error</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Error</span><span class="op">&gt;</span>(<span class="ident">source</span>: <span class="kw">impl</span> <span class="ident">Display</span>) -&gt; <span class="ident">E</span> {
-    <span class="ident">E::catch_all</span>(<span class="ident">StatusCode::BadRequest</span>, <span class="ident">source</span>.<span class="ident">to_string</span>())
+<span class="kw">fn </span>request_error&lt;E: Error&gt;(source: <span class="kw">impl </span>Display) -&gt; E {
+    E::catch_all(StatusCode::BadRequest, source.to_string())
 }
 
-<span class="kw">fn</span> <span class="ident">surf_error</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Error</span><span class="op">&gt;</span>(<span class="ident">source</span>: <span class="ident">surf::Error</span>) -&gt; <span class="ident">E</span> {
-    <span class="ident">E::catch_all</span>(<span class="ident">source</span>.<span class="ident">status</span>(), <span class="ident">source</span>.<span class="ident">to_string</span>())
+<span class="kw">fn </span>surf_error&lt;E: Error&gt;(source: surf::Error) -&gt; E {
+    E::catch_all(source.status(), source.to_string())
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="surf_disco" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0 (a55dd71d5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="surf_disco" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0 (897e37553 2022-11-02)" ></div></body></html>
