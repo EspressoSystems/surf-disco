@@ -1,6 +1,7 @@
 [package]
 name = "surf-disco"
 version = "0.1.0"
+authors = ["Espresso Systems <hello@espressosys.com>"]
 edition = "2021"
 
 [dependencies]

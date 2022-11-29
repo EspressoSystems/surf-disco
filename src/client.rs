@@ -1,3 +1,9 @@
+// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the surf-disco library.
+
+// You should have received a copy of the MIT License
+// along with the surf-disco library. If not, see <https://mit-license.org/>.
+
 use crate::{http, Error, Method, Request, SocketRequest, StatusCode, Url};
 use async_std::task::sleep;
 use derivative::Derivative;
