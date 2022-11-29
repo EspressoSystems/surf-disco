@@ -1,3 +1,9 @@
+// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the surf-disco library.
+
+// You should have received a copy of the MIT License
+// along with the surf-disco library. If not, see <https://mit-license.org/>.
+
 //! Surf Disco: a client library for [Tide Disco](https://tide-disco.docs.espressosys.com/tide_disco/) applications.
 //!
 //! # Quick Start
