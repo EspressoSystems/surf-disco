@@ -222,7 +222,19 @@
 <span id="222">222</span>
 <span id="223">223</span>
 <span id="224">224</span>
-</pre><pre class="rust"><code><span class="kw">use crate</span>::{Error, StatusCode, Url};
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
+// This file is part of the surf-disco library.
+
+// You should have received a copy of the MIT License
+// along with the surf-disco library. If not, see &lt;https://mit-license.org/&gt;.
+
+</span><span class="kw">use crate</span>::{Error, StatusCode, Url};
 <span class="kw">use </span>async_tungstenite::{
     async_std::{connect_async, ConnectStream},
     tungstenite::{http::request::Builder <span class="kw">as </span>RequestBuilder, Error <span class="kw">as </span>WsError, Message},
