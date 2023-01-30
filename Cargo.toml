@@ -18,4 +18,4 @@ tide-disco = { git = "https://github.com/EspressoSystems/tide-disco.git", tag = 
 
 [dev-dependencies]
 portpicker = "0.1"
-toml = "0.5"
+toml = "0.7"
