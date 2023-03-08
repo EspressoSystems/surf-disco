@@ -57,7 +57,7 @@ impl<T: DeserializeOwned, E: Error> Request<T, E> {
     pub fn body_binary<B: Serialize>(self, body: &B) -> Result<Self, E> {
         Ok(self
             .inner
-            .body_bytes(&bincode::serialize(body).map_err(request_error)?)
+            .body_bytes(bincode::serialize(body).map_err(request_error)?)
             .into())
     }
 
