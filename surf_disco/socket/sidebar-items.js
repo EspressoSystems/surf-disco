@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["Unsupported","Unconstructable enum used to disable the [Sink] functionality of [Connection]."]],"struct":[["Connection","A bi-directional connection to a WebSocket server."],["SocketRequest",""]]};
+window.SIDEBAR_ITEMS = {"enum":["Unsupported"],"struct":["Connection","SocketRequest"]};
