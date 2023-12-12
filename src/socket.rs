@@ -27,7 +27,7 @@ pub struct SocketRequest<E> {
 
 impl<E> From<Url> for SocketRequest<E> {
     fn from(mut url: Url) -> Self {
-        url.set_scheme("ws").unwrap();
+        url.set_scheme(&socket_scheme(url.scheme())).unwrap();
         RequestBuilder::new().uri(url.to_string()).into()
     }
 }
@@ -228,3 +228,17 @@ impl<FromServer, ToServer: ?Sized, E> Drop for Connection<FromServer, ToServer, 
 /// Unconstructable enum used to disable the [Sink] functionality of [Connection].
 #[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub enum Unsupported {}
+
+/// Get the scheme for a WebSockets connection upgraded from an existing stateless connection.
+///
+/// `scheme` is the scheme of the stateless connection, e.g. HTTP or HTTPS. If the scheme has a
+/// known WebSockets counterpart, e.g. WS or WSS, we return it. Otherwise we trust the user knows
+/// what they're doing and return `scheme` unmodified.
+fn socket_scheme(scheme: &str) -> String {
+    match scheme {
+        "http" => "ws",
+        "https" => "wss",
+        _ => scheme,
+    }
+    .to_string()
+}
