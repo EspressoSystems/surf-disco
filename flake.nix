@@ -38,6 +38,7 @@
 
             curl
 
+            cargo-audit
             cargo-edit
             cargo-udeps
             cargo-sort
