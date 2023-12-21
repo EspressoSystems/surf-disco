@@ -121,7 +121,7 @@ impl<T: DeserializeOwned, E: Error> Request<T, E> {
                     // If we are unable to even read the body, just return a generic error message
                     // based on the status code.
                     return Err(E::catch_all(
-                        res.status(),
+                        res.status().into(),
                         format!(
                             "Request terminated with error {}. Failed to read request body due to {}",
                             res.status(),
@@ -155,13 +155,13 @@ impl<T: DeserializeOwned, E: Error> Request<T, E> {
             //    body is a string, we can use the `catch_all` variant of `E` to include the
             //    contents of the string in the error message.
             if let Ok(msg) = std::str::from_utf8(&bytes) {
-                return Err(E::catch_all(res.status(), msg.to_string()));
+                return Err(E::catch_all(res.status().into(), msg.to_string()));
             }
 
             // The response body was not an `E` or a string. Return the most helpful error message
             // we can, including the status code, content type, and raw body.
             Err(E::catch_all(
-                res.status(),
+                res.status().into(),
                 format!(
                     "Request terminated with error {}. Content-Type: {}. Body: 0x{}",
                     res.status(),
@@ -181,5 +181,5 @@ fn request_error<E: Error>(source: impl Display) -> E {
 }
 
 fn surf_error<E: Error>(source: surf::Error) -> E {
-    E::catch_all(source.status(), source.to_string())
+    E::catch_all(source.status().into(), source.to_string())
 }

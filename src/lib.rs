@@ -30,9 +30,10 @@ pub use error::Error;
 pub use request::Request;
 pub use socket::SocketRequest;
 pub use surf::{
-    http::{self, Method, StatusCode},
+    http::{self, Method},
     Url,
 };
+pub use tide_disco::StatusCode;
 
 /// Build an HTTP `GET` request.
 pub fn get<T: DeserializeOwned, E: Error>(url: Url) -> Request<T, E> {
