@@ -306,7 +306,7 @@
                     <span class="comment">// If we are unable to even read the body, just return a generic error message
                     // based on the status code.
                     </span><span class="kw">return </span><span class="prelude-val">Err</span>(E::catch_all(
-                        res.status(),
+                        res.status().into(),
                         <span class="macro">format!</span>(
                             <span class="string">&quot;Request terminated with error {}. Failed to read request body due to {}&quot;</span>,
                             res.status(),
@@ -340,13 +340,13 @@
             //    body is a string, we can use the `catch_all` variant of `E` to include the
             //    contents of the string in the error message.
             </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(msg) = std::str::from_utf8(<span class="kw-2">&amp;</span>bytes) {
-                <span class="kw">return </span><span class="prelude-val">Err</span>(E::catch_all(res.status(), msg.to_string()));
+                <span class="kw">return </span><span class="prelude-val">Err</span>(E::catch_all(res.status().into(), msg.to_string()));
             }
 
             <span class="comment">// The response body was not an `E` or a string. Return the most helpful error message
             // we can, including the status code, content type, and raw body.
             </span><span class="prelude-val">Err</span>(E::catch_all(
-                res.status(),
+                res.status().into(),
                 <span class="macro">format!</span>(
                     <span class="string">&quot;Request terminated with error {}. Content-Type: {}. Body: 0x{}&quot;</span>,
                     res.status(),
@@ -366,6 +366,6 @@
 }
 
 <span class="kw">fn </span>surf_error&lt;E: Error&gt;(source: surf::Error) -&gt; E {
-    E::catch_all(source.status(), source.to_string())
+    E::catch_all(source.status().into(), source.to_string())
 }
 </code></pre></div></section></main></body></html>

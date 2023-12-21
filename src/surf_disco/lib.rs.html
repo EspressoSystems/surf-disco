@@ -54,6 +54,7 @@
 <a href="#54" id="54">54</a>
 <a href="#55" id="55">55</a>
 <a href="#56" id="56">56</a>
+<a href="#57" id="57">57</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the surf-disco library.
 
@@ -86,9 +87,10 @@
 <span class="kw">pub use </span>request::Request;
 <span class="kw">pub use </span>socket::SocketRequest;
 <span class="kw">pub use </span>surf::{
-    http::{<span class="self">self</span>, Method, StatusCode},
+    http::{<span class="self">self</span>, Method},
     Url,
 };
+<span class="kw">pub use </span>tide_disco::StatusCode;
 
 <span class="doccomment">/// Build an HTTP `GET` request.
 </span><span class="kw">pub fn </span>get&lt;T: DeserializeOwned, E: Error&gt;(url: Url) -&gt; Request&lt;T, E&gt; {
