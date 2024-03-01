@@ -12,7 +12,7 @@
 //! # use surf_disco::{Client, error::ClientError};
 //! # async fn ex() {
 //! let url = "http://localhost:50000".parse().unwrap();
-//! let client: Client<ClientError> = Client::new(url);
+//! let client: Client<ClientError, 0, 1> = Client::new(url);
 //! let res: String = client.get("/app/route").send().await.unwrap();
 //! # }
 //! ```
@@ -36,12 +36,16 @@ pub use surf::{
 pub use tide_disco::StatusCode;
 
 /// Build an HTTP `GET` request.
-pub fn get<T: DeserializeOwned, E: Error>(url: Url) -> Request<T, E> {
+pub fn get<T: DeserializeOwned, E: Error, const MAJOR: u16, const MINOR: u16>(
+    url: Url,
+) -> Request<T, E, MAJOR, MINOR> {
     Client::default().get(url.as_ref())
 }
 
 /// Build an HTTP `POST` request.
-pub fn post<T: DeserializeOwned, E: Error>(url: Url) -> Request<T, E> {
+pub fn post<T: DeserializeOwned, E: Error, const MAJOR: u16, const MINOR: u16>(
+    url: Url,
+) -> Request<T, E, MAJOR, MINOR> {
     Client::default().post(url.as_ref())
 }
 
@@ -52,6 +56,9 @@ pub fn post<T: DeserializeOwned, E: Error>(url: Url) -> Request<T, E> {
 /// client will continue retrying `/healthcheck` requests until `timeout` has elapsed (or forever,
 /// if `timeout` is `None`). If the timeout expires before a `/healthcheck` request succeeds,
 /// [connect] will return `false`.
-pub async fn connect<E: Error>(url: Url, timeout: Option<Duration>) -> bool {
-    Client::<E>::new(url).connect(timeout).await
+pub async fn connect<E: Error, const MAJOR: u16, const MINOR: u16>(
+    url: Url,
+    timeout: Option<Duration>,
+) -> bool {
+    Client::<E, MAJOR, MINOR>::new(url).connect(timeout).await
 }
