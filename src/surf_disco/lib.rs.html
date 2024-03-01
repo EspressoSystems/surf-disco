@@ -56,6 +56,13 @@
 <a href="#55" id="55">55</a>
 <a href="#56" id="56">56</a>
 <a href="#57" id="57">57</a>
+<a href="#58" id="58">58</a>
+<a href="#59" id="59">59</a>
+<a href="#60" id="60">60</a>
+<a href="#61" id="61">61</a>
+<a href="#62" id="62">62</a>
+<a href="#63" id="63">63</a>
+<a href="#64" id="64">64</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the surf-disco library.
 
@@ -70,7 +77,7 @@
 //! # use surf_disco::{Client, error::ClientError};
 //! # async fn ex() {
 //! let url = "http://localhost:50000".parse().unwrap();
-//! let client: Client&lt;ClientError&gt; = Client::new(url);
+//! let client: Client&lt;ClientError, 0, 1&gt; = Client::new(url);
 //! let res: String = client.get("/app/route").send().await.unwrap();
 //! # }
 //! ```
@@ -94,12 +101,16 @@
 <span class="kw">pub use </span>tide_disco::StatusCode;
 
 <span class="doccomment">/// Build an HTTP `GET` request.
-</span><span class="kw">pub fn </span>get&lt;T: DeserializeOwned, E: Error&gt;(url: Url) -&gt; Request&lt;T, E&gt; {
+</span><span class="kw">pub fn </span>get&lt;T: DeserializeOwned, E: Error, <span class="kw">const </span>MAJOR: u16, <span class="kw">const </span>MINOR: u16&gt;(
+    url: Url,
+) -&gt; Request&lt;T, E, MAJOR, MINOR&gt; {
     Client::default().get(url.as_ref())
 }
 
 <span class="doccomment">/// Build an HTTP `POST` request.
-</span><span class="kw">pub fn </span>post&lt;T: DeserializeOwned, E: Error&gt;(url: Url) -&gt; Request&lt;T, E&gt; {
+</span><span class="kw">pub fn </span>post&lt;T: DeserializeOwned, E: Error, <span class="kw">const </span>MAJOR: u16, <span class="kw">const </span>MINOR: u16&gt;(
+    url: Url,
+) -&gt; Request&lt;T, E, MAJOR, MINOR&gt; {
     Client::default().post(url.as_ref())
 }
 
@@ -110,7 +121,10 @@
 /// client will continue retrying `/healthcheck` requests until `timeout` has elapsed (or forever,
 /// if `timeout` is `None`). If the timeout expires before a `/healthcheck` request succeeds,
 /// [connect] will return `false`.
-</span><span class="kw">pub async fn </span>connect&lt;E: Error&gt;(url: Url, timeout: <span class="prelude-ty">Option</span>&lt;Duration&gt;) -&gt; bool {
-    Client::&lt;E&gt;::new(url).connect(timeout).<span class="kw">await
+</span><span class="kw">pub async fn </span>connect&lt;E: Error, <span class="kw">const </span>MAJOR: u16, <span class="kw">const </span>MINOR: u16&gt;(
+    url: Url,
+    timeout: <span class="prelude-ty">Option</span>&lt;Duration&gt;,
+) -&gt; bool {
+    Client::&lt;E, MAJOR, MINOR&gt;::new(url).connect(timeout).<span class="kw">await
 </span>}
 </code></pre></div></section></main></body></html>

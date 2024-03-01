@@ -411,6 +411,15 @@
 <a href="#410" id="410">410</a>
 <a href="#411" id="411">411</a>
 <a href="#412" id="412">412</a>
+<a href="#413" id="413">413</a>
+<a href="#414" id="414">414</a>
+<a href="#415" id="415">415</a>
+<a href="#416" id="416">416</a>
+<a href="#417" id="417">417</a>
+<a href="#418" id="418">418</a>
+<a href="#419" id="419">419</a>
+<a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the surf-disco library.
 
@@ -429,12 +438,12 @@
 <span class="doccomment">/// A client of a Tide Disco application.
 </span><span class="attr">#[derive(Derivative)]
 #[derivative(Clone(bound = <span class="string">""</span>), Debug(bound = <span class="string">""</span>))]
-</span><span class="kw">pub struct </span>Client&lt;E&gt; {
+</span><span class="kw">pub struct </span>Client&lt;E, <span class="kw">const </span>MAJOR: u16, <span class="kw">const </span>MINOR: u16&gt; {
     inner: surf::Client,
     _marker: std::marker::PhantomData&lt;<span class="kw">fn</span>(E) -&gt; ()&gt;,
 }
 
-<span class="kw">impl</span>&lt;E: Error&gt; Default <span class="kw">for </span>Client&lt;E&gt; {
+<span class="kw">impl</span>&lt;E: Error, <span class="kw">const </span>MAJOR: u16, <span class="kw">const </span>MINOR: u16&gt; Default <span class="kw">for </span>Client&lt;E, MAJOR, MINOR&gt; {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             inner: surf::Config::new().try_into().unwrap(),
@@ -443,14 +452,14 @@
     }
 }
 
-<span class="kw">impl</span>&lt;E: Error&gt; Client&lt;E&gt; {
+<span class="kw">impl</span>&lt;E: Error, <span class="kw">const </span>MAJOR: u16, <span class="kw">const </span>MINOR: u16&gt; Client&lt;E, MAJOR, MINOR&gt; {
     <span class="doccomment">/// Create a client and connect to the Tide Disco server at `base_url`.
     </span><span class="kw">pub fn </span>new(base_url: Url) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::builder(base_url).build()
     }
 
     <span class="doccomment">/// Create a client with customization.
-    </span><span class="kw">pub fn </span>builder(base_url: Url) -&gt; ClientBuilder&lt;E&gt; {
+    </span><span class="kw">pub fn </span>builder(base_url: Url) -&gt; ClientBuilder&lt;E, MAJOR, MINOR&gt; {
         ClientBuilder::new(base_url)
     }
 
@@ -500,12 +509,12 @@
     </span>}
 
     <span class="doccomment">/// Build an HTTP `GET` request.
-    </span><span class="kw">pub fn </span>get&lt;T: DeserializeOwned&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, route: <span class="kw-2">&amp;</span>str) -&gt; Request&lt;T, E&gt; {
+    </span><span class="kw">pub fn </span>get&lt;T: DeserializeOwned&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, route: <span class="kw-2">&amp;</span>str) -&gt; Request&lt;T, E, MAJOR, MINOR&gt; {
         <span class="self">self</span>.request(Method::Get, route)
     }
 
     <span class="doccomment">/// Build an HTTP `POST` request.
-    </span><span class="kw">pub fn </span>post&lt;T: DeserializeOwned&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, route: <span class="kw-2">&amp;</span>str) -&gt; Request&lt;T, E&gt; {
+    </span><span class="kw">pub fn </span>post&lt;T: DeserializeOwned&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, route: <span class="kw-2">&amp;</span>str) -&gt; Request&lt;T, E, MAJOR, MINOR&gt; {
         <span class="self">self</span>.request(Method::Post, route)
     }
 
@@ -515,8 +524,12 @@
     </span>}
 
     <span class="doccomment">/// Build an HTTP request with the specified method.
-    </span><span class="kw">pub fn </span>request&lt;T: DeserializeOwned&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, method: Method, route: <span class="kw-2">&amp;</span>str) -&gt; Request&lt;T, E&gt; {
-        <span class="kw">let </span>req: Request&lt;T, E&gt; = <span class="self">self</span>.inner.request(method, route).into();
+    </span><span class="kw">pub fn </span>request&lt;T: DeserializeOwned&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        method: Method,
+        route: <span class="kw-2">&amp;</span>str,
+    ) -&gt; Request&lt;T, E, MAJOR, MINOR&gt; {
+        <span class="kw">let </span>req: Request&lt;T, E, MAJOR, MINOR&gt; = <span class="self">self</span>.inner.request(method, route).into();
         <span class="comment">// By default, request binary content from the server, as this is the most compact format
         // supported by all Tide Disco applications.
         </span>req.header(ACCEPT, <span class="string">"application/octet-stream"</span>)
@@ -527,7 +540,7 @@
     /// # Panics
     ///
     /// This will panic if a malformed URL is passed.
-    </span><span class="kw">pub fn </span>socket(<span class="kw-2">&amp;</span><span class="self">self</span>, route: <span class="kw-2">&amp;</span>str) -&gt; SocketRequest&lt;E&gt; {
+    </span><span class="kw">pub fn </span>socket(<span class="kw-2">&amp;</span><span class="self">self</span>, route: <span class="kw-2">&amp;</span>str) -&gt; SocketRequest&lt;E, MAJOR, MINOR&gt; {
         <span class="self">self</span>.inner
             .config()
             .base_url
@@ -542,7 +555,7 @@
     </span><span class="kw">pub fn </span>module&lt;ModError: Error&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         prefix: <span class="kw-2">&amp;</span>str,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Client&lt;ModError&gt;, http::url::ParseError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Client&lt;ModError, MAJOR, MINOR&gt;, http::url::ParseError&gt; {
         <span class="prelude-val">Ok</span>(Client::new(
             <span class="self">self</span>.inner
                 .config()
@@ -555,12 +568,12 @@
 }
 
 <span class="doccomment">/// Interface to specify optional configuration values before creating a [Client].
-</span><span class="kw">pub struct </span>ClientBuilder&lt;E: Error&gt; {
+</span><span class="kw">pub struct </span>ClientBuilder&lt;E: Error, <span class="kw">const </span>MAJOR: u16, <span class="kw">const </span>MINOR: u16&gt; {
     config: surf::Config,
     _marker: std::marker::PhantomData&lt;<span class="kw">fn</span>(E) -&gt; ()&gt;,
 }
 
-<span class="kw">impl</span>&lt;E: Error&gt; ClientBuilder&lt;E&gt; {
+<span class="kw">impl</span>&lt;E: Error, <span class="kw">const </span>MAJOR: u16, <span class="kw">const </span>MINOR: u16&gt; ClientBuilder&lt;E, MAJOR, MINOR&gt; {
     <span class="kw">fn </span>new(<span class="kw-2">mut </span>base_url: Url) -&gt; <span class="self">Self </span>{
         <span class="comment">// If the path part of `base_url` does not end in `/`, `join` will treat it as a filename
         // and remove it, which is never what we want: `base_url` is _always_ a directory-like path.
@@ -586,7 +599,7 @@
     </span>}
 
     <span class="doccomment">/// Create a [Client] with the settings specified in this builder.
-    </span><span class="kw">pub fn </span>build(<span class="self">self</span>) -&gt; Client&lt;E&gt; {
+    </span><span class="kw">pub fn </span>build(<span class="self">self</span>) -&gt; Client&lt;E, MAJOR, MINOR&gt; {
         <span class="comment">// This `unwrap` can only fail if [surf] is built without the `default-client` feature flag,
         // which is a default feature and one we require to build this crate.
         </span><span class="kw">let </span>inner = <span class="self">self</span>.config.try_into().unwrap();
@@ -597,8 +610,10 @@
     }
 }
 
-<span class="kw">impl</span>&lt;E: Error&gt; From&lt;ClientBuilder&lt;E&gt;&gt; <span class="kw">for </span>Client&lt;E&gt; {
-    <span class="kw">fn </span>from(builder: ClientBuilder&lt;E&gt;) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;E: Error, <span class="kw">const </span>MAJOR: u16, <span class="kw">const </span>MINOR: u16&gt; From&lt;ClientBuilder&lt;E, MAJOR, MINOR&gt;&gt;
+    <span class="kw">for </span>Client&lt;E, MAJOR, MINOR&gt;
+{
+    <span class="kw">fn </span>from(builder: ClientBuilder&lt;E, MAJOR, MINOR&gt;) -&gt; <span class="self">Self </span>{
         builder.build()
     }
 }
@@ -616,7 +631,7 @@
     <span class="attr">#[async_std::test]
     </span><span class="kw">async fn </span>test_basic_http_client() {
         <span class="comment">// Set up a simple Tide Disco app as an example.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>app: App&lt;(), ServerError&gt; = App::with_state(());
+        </span><span class="kw">let </span><span class="kw-2">mut </span>app: App&lt;(), ServerError, <span class="number">0</span>, <span class="number">1</span>&gt; = App::with_state(());
         <span class="kw">let </span>api = <span class="macro">toml! </span>{
             [route.get]
             PATH = [<span class="string">"/get"</span>]
@@ -632,7 +647,7 @@
             .unwrap()
             .post(<span class="string">"post"</span>, |req, _state| {
                 <span class="kw">async move </span>{
-                    <span class="kw">if </span>req.body_auto::&lt;String&gt;().unwrap() == <span class="string">"body" </span>{
+                    <span class="kw">if </span>req.body_auto::&lt;String, <span class="number">0</span>, <span class="number">1</span>&gt;().unwrap() == <span class="string">"body" </span>{
                         <span class="prelude-val">Ok</span>(<span class="string">"response"</span>)
                     } <span class="kw">else </span>{
                         <span class="prelude-val">Err</span>(ServerError::catch_all(
@@ -649,7 +664,7 @@
 
         <span class="comment">// Connect a client.
         </span><span class="kw">let </span>client =
-            Client::&lt;ServerError&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}"</span>, port).parse().unwrap());
+            Client::&lt;ServerError, <span class="number">0</span>, <span class="number">1</span>&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}"</span>, port).parse().unwrap());
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">None</span>).<span class="kw">await</span>);
 
         <span class="comment">// Test a couple of basic requests.
@@ -684,7 +699,7 @@
     <span class="attr">#[async_std::test]
     </span><span class="kw">async fn </span>test_streaming_client() {
         <span class="comment">// Set up a simple Tide Disco app as an example.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>app: App&lt;(), ServerError&gt; = App::with_state(());
+        </span><span class="kw">let </span><span class="kw-2">mut </span>app: App&lt;(), ServerError, <span class="number">0</span>, <span class="number">1</span>&gt; = App::with_state(());
         <span class="kw">let </span>api = <span class="macro">toml! </span>{
             [route.echo]
             PATH = [<span class="string">"/echo"</span>]
@@ -716,7 +731,7 @@
 
         <span class="comment">// Connect a client.
         </span><span class="kw">let </span>client =
-            Client::&lt;ServerError&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}"</span>, port).parse().unwrap());
+            Client::&lt;ServerError, <span class="number">0</span>, <span class="number">1</span>&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}"</span>, port).parse().unwrap());
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">None</span>).<span class="kw">await</span>);
 
         <span class="comment">// Test a bidirectional endpoint.
@@ -758,7 +773,8 @@
     <span class="attr">#[async_std::test]
     </span><span class="kw">async fn </span>test_healthcheck() {
         <span class="comment">// Set up a simple Tide Disco app as an example.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>app: App&lt;<span class="kw">_</span>, ServerError&gt; = App::with_state(RwLock::new(HealthCheck::Initializing));
+        </span><span class="kw">let </span><span class="kw-2">mut </span>app: App&lt;<span class="kw">_</span>, ServerError, <span class="number">0</span>, <span class="number">1</span>&gt; =
+            App::with_state(RwLock::new(HealthCheck::Initializing));
         <span class="kw">let </span>api = <span class="macro">toml! </span>{
             [route.init]
             PATH = [<span class="string">"/init"</span>]
@@ -779,8 +795,9 @@
         spawn(app.serve(<span class="macro">format!</span>(<span class="string">"0.0.0.0:{}"</span>, port)));
 
         <span class="comment">// Connect a client.
-        </span><span class="kw">let </span>client =
-            Client::&lt;ServerError&gt;::new(<span class="macro">format!</span>(<span class="string">"http://localhost:{}/mod"</span>, port).parse().unwrap());
+        </span><span class="kw">let </span>client = Client::&lt;ServerError, <span class="number">0</span>, <span class="number">1</span>&gt;::new(
+            <span class="macro">format!</span>(<span class="string">"http://localhost:{}/mod"</span>, port).parse().unwrap(),
+        );
         <span class="macro">assert!</span>(client.connect(<span class="prelude-val">None</span>).<span class="kw">await</span>);
         <span class="macro">assert_eq!</span>(
             HealthCheck::Initializing,
@@ -813,9 +830,10 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_builder() {
-        <span class="kw">let </span>client = Client::&lt;ServerError&gt;::builder(<span class="string">"http://www.example.com"</span>.parse().unwrap())
-            .set_timeout(<span class="prelude-val">None</span>)
-            .build();
+        <span class="kw">let </span>client =
+            Client::&lt;ServerError, <span class="number">0</span>, <span class="number">1</span>&gt;::builder(<span class="string">"http://www.example.com"</span>.parse().unwrap())
+                .set_timeout(<span class="prelude-val">None</span>)
+                .build();
         <span class="macro">assert_eq!</span>(
             client.inner.config().base_url,
             <span class="prelude-val">Some</span>(<span class="string">"http://www.example.com"</span>.parse().unwrap())
