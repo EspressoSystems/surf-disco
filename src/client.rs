@@ -10,18 +10,19 @@ use derivative::Derivative;
 use serde::de::DeserializeOwned;
 use std::time::{Duration, Instant};
 use surf::http::headers::ACCEPT;
+use versioned_binary_serialization::version::StaticVersionType;
 
 pub use tide_disco::healthcheck::{HealthCheck, HealthStatus};
 
 /// A client of a Tide Disco application.
 #[derive(Derivative)]
 #[derivative(Clone(bound = ""), Debug(bound = ""))]
-pub struct Client<E, const MAJOR: u16, const MINOR: u16> {
+pub struct Client<E, VER: StaticVersionType> {
     inner: surf::Client,
-    _marker: std::marker::PhantomData<fn(E) -> ()>,
+    _marker: std::marker::PhantomData<fn(E, VER) -> ()>,
 }
 
-impl<E: Error, const MAJOR: u16, const MINOR: u16> Default for Client<E, MAJOR, MINOR> {
+impl<E: Error, VER: StaticVersionType> Default for Client<E, VER> {
     fn default() -> Self {
         Self {
             inner: surf::Config::new().try_into().unwrap(),
@@ -30,15 +31,15 @@ impl<E: Error, const MAJOR: u16, const MINOR: u16> Default for Client<E, MAJOR, 
     }
 }
 
-impl<E: Error, const MAJOR: u16, const MINOR: u16> Client<E, MAJOR, MINOR> {
+impl<E: Error, VER: StaticVersionType> Client<E, VER> {
     /// Create a client and connect to the Tide Disco server at `base_url`.
     pub fn new(base_url: Url) -> Self {
         Self::builder(base_url).build()
     }
 
     /// Create a client with customization.
-    pub fn builder(base_url: Url) -> ClientBuilder<E, MAJOR, MINOR> {
-        ClientBuilder::new(base_url)
+    pub fn builder(base_url: Url) -> ClientBuilder<E, VER> {
+        ClientBuilder::<E, VER>::new(base_url)
     }
 
     /// Connect to the server, retrying if the server is not running.
@@ -87,12 +88,12 @@ impl<E: Error, const MAJOR: u16, const MINOR: u16> Client<E, MAJOR, MINOR> {
     }
 
     /// Build an HTTP `GET` request.
-    pub fn get<T: DeserializeOwned>(&self, route: &str) -> Request<T, E, MAJOR, MINOR> {
+    pub fn get<T: DeserializeOwned>(&self, route: &str) -> Request<T, E, VER> {
         self.request(Method::Get, route)
     }
 
     /// Build an HTTP `POST` request.
-    pub fn post<T: DeserializeOwned>(&self, route: &str) -> Request<T, E, MAJOR, MINOR> {
+    pub fn post<T: DeserializeOwned>(&self, route: &str) -> Request<T, E, VER> {
         self.request(Method::Post, route)
     }
 
@@ -102,12 +103,8 @@ impl<E: Error, const MAJOR: u16, const MINOR: u16> Client<E, MAJOR, MINOR> {
     }
 
     /// Build an HTTP request with the specified method.
-    pub fn request<T: DeserializeOwned>(
-        &self,
-        method: Method,
-        route: &str,
-    ) -> Request<T, E, MAJOR, MINOR> {
-        let req: Request<T, E, MAJOR, MINOR> = self.inner.request(method, route).into();
+    pub fn request<T: DeserializeOwned>(&self, method: Method, route: &str) -> Request<T, E, VER> {
+        let req: Request<T, E, VER> = self.inner.request(method, route).into();
         // By default, request binary content from the server, as this is the most compact format
         // supported by all Tide Disco applications.
         req.header(ACCEPT, "application/octet-stream")
@@ -118,7 +115,7 @@ impl<E: Error, const MAJOR: u16, const MINOR: u16> Client<E, MAJOR, MINOR> {
     /// # Panics
     ///
     /// This will panic if a malformed URL is passed.
-    pub fn socket(&self, route: &str) -> SocketRequest<E, MAJOR, MINOR> {
+    pub fn socket(&self, route: &str) -> SocketRequest<E, VER> {
         self.inner
             .config()
             .base_url
@@ -133,7 +130,7 @@ impl<E: Error, const MAJOR: u16, const MINOR: u16> Client<E, MAJOR, MINOR> {
     pub fn module<ModError: Error>(
         &self,
         prefix: &str,
-    ) -> Result<Client<ModError, MAJOR, MINOR>, http::url::ParseError> {
+    ) -> Result<Client<ModError, VER>, http::url::ParseError> {
         Ok(Client::new(
             self.inner
                 .config()
@@ -146,12 +143,12 @@ impl<E: Error, const MAJOR: u16, const MINOR: u16> Client<E, MAJOR, MINOR> {
 }
 
 /// Interface to specify optional configuration values before creating a [Client].
-pub struct ClientBuilder<E: Error, const MAJOR: u16, const MINOR: u16> {
+pub struct ClientBuilder<E: Error, VER: StaticVersionType> {
     config: surf::Config,
-    _marker: std::marker::PhantomData<fn(E) -> ()>,
+    _marker: std::marker::PhantomData<fn(E, VER) -> ()>,
 }
 
-impl<E: Error, const MAJOR: u16, const MINOR: u16> ClientBuilder<E, MAJOR, MINOR> {
+impl<E: Error, VER: StaticVersionType> ClientBuilder<E, VER> {
     fn new(mut base_url: Url) -> Self {
         // If the path part of `base_url` does not end in `/`, `join` will treat it as a filename
         // and remove it, which is never what we want: `base_url` is _always_ a directory-like path.
@@ -177,7 +174,7 @@ impl<E: Error, const MAJOR: u16, const MINOR: u16> ClientBuilder<E, MAJOR, MINOR
     }
 
     /// Create a [Client] with the settings specified in this builder.
-    pub fn build(self) -> Client<E, MAJOR, MINOR> {
+    pub fn build(self) -> Client<E, VER> {
         // This `unwrap` can only fail if [surf] is built without the `default-client` feature flag,
         // which is a default feature and one we require to build this crate.
         let inner = self.config.try_into().unwrap();
@@ -188,16 +185,16 @@ impl<E: Error, const MAJOR: u16, const MINOR: u16> ClientBuilder<E, MAJOR, MINOR
     }
 }
 
-impl<E: Error, const MAJOR: u16, const MINOR: u16> From<ClientBuilder<E, MAJOR, MINOR>>
-    for Client<E, MAJOR, MINOR>
-{
-    fn from(builder: ClientBuilder<E, MAJOR, MINOR>) -> Self {
+impl<E: Error, VER: StaticVersionType> From<ClientBuilder<E, VER>> for Client<E, VER> {
+    fn from(builder: ClientBuilder<E, VER>) -> Self {
         builder.build()
     }
 }
 
 #[cfg(test)]
 mod test {
+    use crate::socket::Connection;
+
     use super::*;
     use async_std::{sync::RwLock, task::spawn};
     use futures::{stream::iter, FutureExt, SinkExt, StreamExt};
@@ -205,11 +202,14 @@ mod test {
     use serde::{Deserialize, Serialize};
     use tide_disco::{error::ServerError, App};
     use toml::toml;
+    use versioned_binary_serialization::version::StaticVersion;
+    type Ver01 = StaticVersion<0, 1>;
+    const VER_0_1: Ver01 = StaticVersion {};
 
     #[async_std::test]
     async fn test_basic_http_client() {
         // Set up a simple Tide Disco app as an example.
-        let mut app: App<(), ServerError, 0, 1> = App::with_state(());
+        let mut app: App<(), ServerError, Ver01> = App::with_state(());
         let api = toml! {
             [route.get]
             PATH = ["/get"]
@@ -225,7 +225,7 @@ mod test {
             .unwrap()
             .post("post", |req, _state| {
                 async move {
-                    if req.body_auto::<String, 0, 1>().unwrap() == "body" {
+                    if req.body_auto::<String, _>(VER_0_1).unwrap() == "body" {
                         Ok("response")
                     } else {
                         Err(ServerError::catch_all(
@@ -238,11 +238,12 @@ mod test {
             })
             .unwrap();
         let port = pick_unused_port().unwrap();
-        spawn(app.serve(format!("0.0.0.0:{}", port)));
+        spawn(app.serve(format!("0.0.0.0:{}", port), VER_0_1));
 
         // Connect a client.
-        let client =
-            Client::<ServerError, 0, 1>::new(format!("http://localhost:{}", port).parse().unwrap());
+        let client = Client::<ServerError, Ver01>::new(
+            format!("http://localhost:{}", port).parse().unwrap(),
+        );
         assert!(client.connect(None).await);
 
         // Test a couple of basic requests.
@@ -277,7 +278,7 @@ mod test {
     #[async_std::test]
     async fn test_streaming_client() {
         // Set up a simple Tide Disco app as an example.
-        let mut app: App<(), ServerError, 0, 1> = App::with_state(());
+        let mut app: App<(), ServerError, Ver01> = App::with_state(());
         let api = toml! {
             [route.echo]
             PATH = ["/echo"]
@@ -305,15 +306,15 @@ mod test {
             })
             .unwrap();
         let port = pick_unused_port().unwrap();
-        spawn(app.serve(format!("0.0.0.0:{}", port)));
+        spawn(app.serve(format!("0.0.0.0:{}", port), VER_0_1));
 
         // Connect a client.
-        let client =
-            Client::<ServerError, 0, 1>::new(format!("http://localhost:{}", port).parse().unwrap());
+        let client: Client<ServerError, _> =
+            Client::new(format!("http://localhost:{}", port).parse().unwrap());
         assert!(client.connect(None).await);
 
         // Test a bidirectional endpoint.
-        let mut conn = client
+        let mut conn: Connection<_, _, _, Ver01> = client
             .socket("mod/echo")
             .connect::<String, String>()
             .await
@@ -351,7 +352,7 @@ mod test {
     #[async_std::test]
     async fn test_healthcheck() {
         // Set up a simple Tide Disco app as an example.
-        let mut app: App<_, ServerError, 0, 1> =
+        let mut app: App<_, ServerError, Ver01> =
             App::with_state(RwLock::new(HealthCheck::Initializing));
         let api = toml! {
             [route.init]
@@ -370,10 +371,10 @@ mod test {
             })
             .unwrap();
         let port = pick_unused_port().unwrap();
-        spawn(app.serve(format!("0.0.0.0:{}", port)));
+        spawn(app.serve(format!("0.0.0.0:{}", port), VER_0_1));
 
         // Connect a client.
-        let client = Client::<ServerError, 0, 1>::new(
+        let client = Client::<ServerError, Ver01>::new(
             format!("http://localhost:{}/mod", port).parse().unwrap(),
         );
         assert!(client.connect(None).await);
@@ -409,7 +410,7 @@ mod test {
     #[test]
     fn test_builder() {
         let client =
-            Client::<ServerError, 0, 1>::builder("http://www.example.com".parse().unwrap())
+            Client::<ServerError, Ver01>::builder("http://www.example.com".parse().unwrap())
                 .set_timeout(None)
                 .build();
         assert_eq!(

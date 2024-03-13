@@ -8,18 +8,16 @@ use crate::{Error, StatusCode};
 use serde::{de::DeserializeOwned, Serialize};
 use std::fmt::Display;
 use surf::http::headers::{HeaderName, ToHeaderValues};
-use versioned_binary_serialization::{BinarySerializer, Serializer};
+use versioned_binary_serialization::{version::StaticVersionType, BinarySerializer, Serializer};
 
 #[must_use]
 #[derive(Debug)]
-pub struct Request<T, E, const MAJOR: u16, const MINOR: u16> {
+pub struct Request<T, E, VER: StaticVersionType> {
     inner: surf::RequestBuilder,
-    marker: std::marker::PhantomData<fn(T, E) -> ()>,
+    marker: std::marker::PhantomData<fn(T, E, VER) -> ()>,
 }
 
-impl<T, E, const MAJOR: u16, const MINOR: u16> From<surf::RequestBuilder>
-    for Request<T, E, MAJOR, MINOR>
-{
+impl<T, E, VER: StaticVersionType> From<surf::RequestBuilder> for Request<T, E, VER> {
     fn from(inner: surf::RequestBuilder) -> Self {
         Self {
             inner,
@@ -28,9 +26,7 @@ impl<T, E, const MAJOR: u16, const MINOR: u16> From<surf::RequestBuilder>
     }
 }
 
-impl<T: DeserializeOwned, E: Error, const MAJOR: u16, const MINOR: u16>
-    Request<T, E, MAJOR, MINOR>
-{
+impl<T: DeserializeOwned, E: Error, VER: StaticVersionType> Request<T, E, VER> {
     /// Set a header on the request.
     pub fn header(self, key: impl Into<HeaderName>, value: impl ToHeaderValues) -> Self {
         self.inner.header(key, value).into()
@@ -62,7 +58,7 @@ impl<T: DeserializeOwned, E: Error, const MAJOR: u16, const MINOR: u16>
     pub fn body_binary<B: Serialize>(self, body: &B) -> Result<Self, E> {
         Ok(self
             .inner
-            .body_bytes(Serializer::<MAJOR, MINOR>::serialize(body).map_err(request_error)?)
+            .body_bytes(Serializer::<VER>::serialize(body).map_err(request_error)?)
             .into())
     }
 
@@ -89,10 +85,10 @@ impl<T: DeserializeOwned, E: Error, const MAJOR: u16, const MINOR: u16>
             if let Some(content_type) = res.header("Content-Type").cloned() {
                 match content_type.as_str() {
                     "application/json" => res.body_json().await.map_err(surf_error),
-                    "application/octet-stream" => Serializer::<MAJOR, MINOR>::deserialize(
-                        &res.body_bytes().await.map_err(surf_error)?,
-                    )
-                    .map_err(request_error),
+                    "application/octet-stream" => {
+                        Serializer::<VER>::deserialize(&res.body_bytes().await.map_err(surf_error)?)
+                            .map_err(request_error)
+                    }
                     content_type => {
                         // For help in debugging, include the body with the unexpected content type
                         // in the error message.
@@ -145,7 +141,7 @@ impl<T: DeserializeOwned, E: Error, const MAJOR: u16, const MINOR: u16>
                         }
                     }
                     "application/octet-stream" => {
-                        if let Ok(err) = Serializer::<MAJOR, MINOR>::deserialize(&bytes) {
+                        if let Ok(err) = Serializer::<VER>::deserialize(&bytes) {
                             return Err(err);
                         }
                     }

@@ -1,6 +1,6 @@
 [package]
 name = "surf-disco"
-version = "0.4.7"
+version = "0.4.8"
 authors = ["Espresso Systems <hello@espressosys.com>"]
 edition = "2021"
 
@@ -17,8 +17,9 @@ hex = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.61"
 surf = "2.3.1"
-tide-disco = { git = "https://github.com/EspressoSystems/tide-disco.git", tag = "v0.4.7" }
-versioned-binary-serialization = { git = "https://github.com/EspressoSystems/versioned-binary-serialization.git", tag = "0.1.0" }
+#tide-disco = { git = "https://github.com/EspressoSystems/tide-disco.git", tag = "v0.4.8" }
+tide-disco = { git = "https://github.com/EspressoSystems/tide-disco.git", branch = "nfy/transition_away_from_const_generics" }
+versioned-binary-serialization = { git = "https://github.com/EspressoSystems/versioned-binary-serialization.git", tag = "0.1.1" }
 
 [dev-dependencies]
 portpicker = "0.1"
