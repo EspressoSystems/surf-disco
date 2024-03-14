@@ -10,15 +10,17 @@
 //!
 //! ```
 //! # use surf_disco::{Client, error::ClientError};
+//! # use versioned_binary_serialization::version::StaticVersion;
 //! # async fn ex() {
 //! let url = "http://localhost:50000".parse().unwrap();
-//! let client: Client<ClientError, 0, 1> = Client::new(url);
+//! let client: Client<ClientError, StaticVersion<0,1>> = Client::new(url);
 //! let res: String = client.get("/app/route").send().await.unwrap();
 //! # }
 //! ```
 //!
 use serde::de::DeserializeOwned;
 use std::time::Duration;
+use versioned_binary_serialization::version::StaticVersionType;
 
 pub mod client;
 pub mod error;
@@ -36,16 +38,12 @@ pub use surf::{
 pub use tide_disco::StatusCode;
 
 /// Build an HTTP `GET` request.
-pub fn get<T: DeserializeOwned, E: Error, const MAJOR: u16, const MINOR: u16>(
-    url: Url,
-) -> Request<T, E, MAJOR, MINOR> {
+pub fn get<T: DeserializeOwned, E: Error, VER: StaticVersionType>(url: Url) -> Request<T, E, VER> {
     Client::default().get(url.as_ref())
 }
 
 /// Build an HTTP `POST` request.
-pub fn post<T: DeserializeOwned, E: Error, const MAJOR: u16, const MINOR: u16>(
-    url: Url,
-) -> Request<T, E, MAJOR, MINOR> {
+pub fn post<T: DeserializeOwned, E: Error, VER: StaticVersionType>(url: Url) -> Request<T, E, VER> {
     Client::default().post(url.as_ref())
 }
 
@@ -56,9 +54,9 @@ pub fn post<T: DeserializeOwned, E: Error, const MAJOR: u16, const MINOR: u16>(
 /// client will continue retrying `/healthcheck` requests until `timeout` has elapsed (or forever,
 /// if `timeout` is `None`). If the timeout expires before a `/healthcheck` request succeeds,
 /// [connect] will return `false`.
-pub async fn connect<E: Error, const MAJOR: u16, const MINOR: u16>(
+pub async fn connect<E: Error, VER: StaticVersionType>(
     url: Url,
     timeout: Option<Duration>,
 ) -> bool {
-    Client::<E, MAJOR, MINOR>::new(url).connect(timeout).await
+    Client::<E, VER>::new(url).connect(timeout).await
 }

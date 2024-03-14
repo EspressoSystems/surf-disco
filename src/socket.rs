@@ -17,25 +17,23 @@ use futures::{
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use std::pin::Pin;
 use surf::http::headers::{HeaderName, ToHeaderValues};
-use versioned_binary_serialization::{BinarySerializer, Serializer};
+use versioned_binary_serialization::{version::StaticVersionType, BinarySerializer, Serializer};
 
 #[must_use]
 #[derive(Debug)]
-pub struct SocketRequest<E, const MAJOR: u16, const MINOR: u16> {
+pub struct SocketRequest<E, VER: StaticVersionType> {
     inner: RequestBuilder,
-    marker: std::marker::PhantomData<fn(E) -> ()>,
+    marker: std::marker::PhantomData<fn(E, VER) -> ()>,
 }
 
-impl<E, const MAJOR: u16, const MINOR: u16> From<Url> for SocketRequest<E, MAJOR, MINOR> {
+impl<E, VER: StaticVersionType> From<Url> for SocketRequest<E, VER> {
     fn from(mut url: Url) -> Self {
         url.set_scheme(&socket_scheme(url.scheme())).unwrap();
         RequestBuilder::new().uri(url.to_string()).into()
     }
 }
 
-impl<E, const MAJOR: u16, const MINOR: u16> From<RequestBuilder>
-    for SocketRequest<E, MAJOR, MINOR>
-{
+impl<E, VER: StaticVersionType> From<RequestBuilder> for SocketRequest<E, VER> {
     fn from(inner: RequestBuilder) -> Self {
         Self {
             inner,
@@ -44,7 +42,7 @@ impl<E, const MAJOR: u16, const MINOR: u16> From<RequestBuilder>
     }
 }
 
-impl<E: Error, const MAJOR: u16, const MINOR: u16> SocketRequest<E, MAJOR, MINOR> {
+impl<E: Error, VER: StaticVersionType> SocketRequest<E, VER> {
     /// Set a header on the request.
     pub fn header(self, key: impl Into<HeaderName>, values: impl ToHeaderValues) -> Self {
         let mut req = self.inner;
@@ -58,7 +56,7 @@ impl<E: Error, const MAJOR: u16, const MINOR: u16> SocketRequest<E, MAJOR, MINOR
     /// Start the WebSocket handshake and initiate a connection to the server.
     pub async fn connect<FromServer: DeserializeOwned, ToServer: Serialize + ?Sized>(
         self,
-    ) -> Result<Connection<FromServer, ToServer, E, MAJOR, MINOR>, E> {
+    ) -> Result<Connection<FromServer, ToServer, E, VER>, E> {
         Ok(connect_async(self.inner.body(()).unwrap())
             .await
             .map_err(|err| E::catch_all(StatusCode::BadRequest, err.to_string()))?
@@ -72,19 +70,20 @@ impl<E: Error, const MAJOR: u16, const MINOR: u16> SocketRequest<E, MAJOR, MINOR
     /// [Unsupported], so that you don't have to specify the type parameter if it isn't used.
     pub async fn subscribe<FromServer: DeserializeOwned>(
         self,
-    ) -> Result<Connection<FromServer, Unsupported, E, MAJOR, MINOR>, E> {
+    ) -> Result<Connection<FromServer, Unsupported, E, VER>, E> {
         self.connect().await
     }
 }
 
 /// A bi-directional connection to a WebSocket server.
-pub struct Connection<FromServer, ToServer: ?Sized, E, const MAJOR: u16, const MINOR: u16> {
+pub struct Connection<FromServer, ToServer: ?Sized, E, VER: StaticVersionType> {
     inner: WebSocketStream<ConnectStream>,
-    marker: std::marker::PhantomData<fn(FromServer, ToServer, E) -> ()>,
+    #[allow(clippy::type_complexity)]
+    marker: std::marker::PhantomData<fn(FromServer, ToServer, E, VER) -> ()>,
 }
 
-impl<FromServer, ToServer: ?Sized, E, const MAJOR: u16, const MINOR: u16>
-    From<WebSocketStream<ConnectStream>> for Connection<FromServer, ToServer, E, MAJOR, MINOR>
+impl<FromServer, ToServer: ?Sized, E, VER: StaticVersionType> From<WebSocketStream<ConnectStream>>
+    for Connection<FromServer, ToServer, E, VER>
 {
     fn from(inner: WebSocketStream<ConnectStream>) -> Self {
         Self {
@@ -94,13 +93,8 @@ impl<FromServer, ToServer: ?Sized, E, const MAJOR: u16, const MINOR: u16>
     }
 }
 
-impl<
-        FromServer: DeserializeOwned,
-        ToServer: ?Sized,
-        E: Error,
-        const MAJOR: u16,
-        const MINOR: u16,
-    > Stream for Connection<FromServer, ToServer, E, MAJOR, MINOR>
+impl<FromServer: DeserializeOwned, ToServer: ?Sized, E: Error, VER: StaticVersionType> Stream
+    for Connection<FromServer, ToServer, E, VER>
 {
     type Item = Result<FromServer, E>;
 
@@ -117,14 +111,14 @@ impl<
                 )))),
             },
             Poll::Ready(Some(Ok(msg))) => Poll::Ready(match msg {
-                Message::Binary(bytes) => Some(
-                    Serializer::<MAJOR, MINOR>::deserialize(&bytes).map_err(|err| {
+                Message::Binary(bytes) => {
+                    Some(Serializer::<VER>::deserialize(&bytes).map_err(|err| {
                         E::catch_all(
                             StatusCode::InternalServerError,
                             format!("invalid binary serialization: {}", err),
                         )
-                    }),
-                ),
+                    }))
+                }
                 Message::Text(s) => Some(serde_json::from_str(&s).map_err(|err| {
                     E::catch_all(
                         StatusCode::InternalServerError,
@@ -142,8 +136,8 @@ impl<
     }
 }
 
-impl<FromServer, ToServer: Serialize + ?Sized, E: Error, const MAJOR: u16, const MINOR: u16>
-    Sink<&ToServer> for Connection<FromServer, ToServer, E, MAJOR, MINOR>
+impl<FromServer, ToServer: Serialize + ?Sized, E: Error, VER: StaticVersionType> Sink<&ToServer>
+    for Connection<FromServer, ToServer, E, VER>
 {
     type Error = E;
 
@@ -157,7 +151,7 @@ impl<FromServer, ToServer: Serialize + ?Sized, E: Error, const MAJOR: u16, const
     }
 
     fn start_send(self: Pin<&mut Self>, item: &ToServer) -> Result<(), Self::Error> {
-        let msg = Message::Binary(Serializer::<MAJOR, MINOR>::serialize(item).map_err(|err| {
+        let msg = Message::Binary(Serializer::<VER>::serialize(item).map_err(|err| {
             E::catch_all(
                 StatusCode::BadRequest,
                 format!("invalid binary serialization: {}", err),
@@ -190,8 +184,8 @@ impl<FromServer, ToServer: Serialize + ?Sized, E: Error, const MAJOR: u16, const
     }
 }
 
-impl<FromServer, ToServer: ?Sized, E, const MAJOR: u16, const MINOR: u16>
-    Connection<FromServer, ToServer, E, MAJOR, MINOR>
+impl<FromServer, ToServer: ?Sized, E, VER: StaticVersionType>
+    Connection<FromServer, ToServer, E, VER>
 {
     /// Project a `Pin<&mut Self>` to a pinned reference to the underlying connection.
     fn pinned_inner(self: Pin<&mut Self>) -> Pin<&mut WebSocketStream<ConnectStream>> {
@@ -216,8 +210,8 @@ impl<FromServer, ToServer: ?Sized, E, const MAJOR: u16, const MINOR: u16>
     }
 }
 
-impl<FromServer, ToServer: ?Sized, E, const MAJOR: u16, const MINOR: u16> Drop
-    for Connection<FromServer, ToServer, E, MAJOR, MINOR>
+impl<FromServer, ToServer: ?Sized, E, VER: StaticVersionType> Drop
+    for Connection<FromServer, ToServer, E, VER>
 {
     fn drop(&mut self) {
         // This is the idiomatic way to implement [drop] for a type that uses pinning. Since [drop]
@@ -234,8 +228,8 @@ impl<FromServer, ToServer: ?Sized, E, const MAJOR: u16, const MINOR: u16> Drop
         // `new_unchecked` is okay because we know this value is never used again after being
         // dropped.
         inner_drop(unsafe { Pin::new_unchecked(self) });
-        fn inner_drop<FromServer, ToServer: ?Sized, E, const MAJOR: u16, const MINOR: u16>(
-            _this: Pin<&mut Connection<FromServer, ToServer, E, MAJOR, MINOR>>,
+        fn inner_drop<FromServer, ToServer: ?Sized, E, VER: StaticVersionType>(
+            _this: Pin<&mut Connection<FromServer, ToServer, E, VER>>,
         ) {
             // Any logic goes here.
         }
