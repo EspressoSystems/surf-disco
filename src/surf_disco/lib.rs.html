@@ -61,8 +61,6 @@
 <a href="#60" id="60">60</a>
 <a href="#61" id="61">61</a>
 <a href="#62" id="62">62</a>
-<a href="#63" id="63">63</a>
-<a href="#64" id="64">64</a>
 </pre></div><pre class="rust"><code><span class="comment">// Copyright (c) 2022 Espresso Systems (espressosys.com)
 // This file is part of the surf-disco library.
 
@@ -75,15 +73,17 @@
 //!
 //! ```
 //! # use surf_disco::{Client, error::ClientError};
+//! # use versioned_binary_serialization::version::StaticVersion;
 //! # async fn ex() {
 //! let url = "http://localhost:50000".parse().unwrap();
-//! let client: Client&lt;ClientError, 0, 1&gt; = Client::new(url);
+//! let client: Client&lt;ClientError, StaticVersion&lt;0,1&gt;&gt; = Client::new(url);
 //! let res: String = client.get("/app/route").send().await.unwrap();
 //! # }
 //! ```
 //!
 </span><span class="kw">use </span>serde::de::DeserializeOwned;
 <span class="kw">use </span>std::time::Duration;
+<span class="kw">use </span>versioned_binary_serialization::version::StaticVersionType;
 
 <span class="kw">pub mod </span>client;
 <span class="kw">pub mod </span>error;
@@ -101,16 +101,12 @@
 <span class="kw">pub use </span>tide_disco::StatusCode;
 
 <span class="doccomment">/// Build an HTTP `GET` request.
-</span><span class="kw">pub fn </span>get&lt;T: DeserializeOwned, E: Error, <span class="kw">const </span>MAJOR: u16, <span class="kw">const </span>MINOR: u16&gt;(
-    url: Url,
-) -&gt; Request&lt;T, E, MAJOR, MINOR&gt; {
+</span><span class="kw">pub fn </span>get&lt;T: DeserializeOwned, E: Error, VER: StaticVersionType&gt;(url: Url) -&gt; Request&lt;T, E, VER&gt; {
     Client::default().get(url.as_ref())
 }
 
 <span class="doccomment">/// Build an HTTP `POST` request.
-</span><span class="kw">pub fn </span>post&lt;T: DeserializeOwned, E: Error, <span class="kw">const </span>MAJOR: u16, <span class="kw">const </span>MINOR: u16&gt;(
-    url: Url,
-) -&gt; Request&lt;T, E, MAJOR, MINOR&gt; {
+</span><span class="kw">pub fn </span>post&lt;T: DeserializeOwned, E: Error, VER: StaticVersionType&gt;(url: Url) -&gt; Request&lt;T, E, VER&gt; {
     Client::default().post(url.as_ref())
 }
 
@@ -121,10 +117,10 @@
 /// client will continue retrying `/healthcheck` requests until `timeout` has elapsed (or forever,
 /// if `timeout` is `None`). If the timeout expires before a `/healthcheck` request succeeds,
 /// [connect] will return `false`.
-</span><span class="kw">pub async fn </span>connect&lt;E: Error, <span class="kw">const </span>MAJOR: u16, <span class="kw">const </span>MINOR: u16&gt;(
+</span><span class="kw">pub async fn </span>connect&lt;E: Error, VER: StaticVersionType&gt;(
     url: Url,
     timeout: <span class="prelude-ty">Option</span>&lt;Duration&gt;,
 ) -&gt; bool {
-    Client::&lt;E, MAJOR, MINOR&gt;::new(url).connect(timeout).<span class="kw">await
+    Client::&lt;E, VER&gt;::new(url).connect(timeout).<span class="kw">await
 </span>}
 </code></pre></div></section></main></body></html>
