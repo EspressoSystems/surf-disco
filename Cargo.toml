@@ -1,23 +1,23 @@
 [package]
 name = "surf-disco"
-version = "0.4.8"
+version = "0.5.0"
 authors = ["Espresso Systems <hello@espressosys.com>"]
 edition = "2021"
 
 [dependencies]
-async-std = { version = "1.10.0", features = ["unstable", "attributes"] }
+async-std = { version = "1.12", features = ["attributes"] }
 async-tungstenite = { version = "0.13.1", features = [
     "async-std-runtime",
     "async-tls",
     "async-native-tls",
 ] }
 derivative = "2.2"
-futures = "0.3.21"
+futures = "0.3"
 hex = "0.4"
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0.61"
-surf = "2.3.1"
-tide-disco = { git = "https://github.com/EspressoSystems/tide-disco.git", tag = "v0.4.8" }
+serde_json = "1.0"
+surf = "2.3"
+tide-disco = { git = "https://github.com/EspressoSystems/tide-disco.git", tag = "v0.5.0" }
 versioned-binary-serialization = { git = "https://github.com/EspressoSystems/versioned-binary-serialization.git", tag = "0.1.2" }
 
 [dev-dependencies]
