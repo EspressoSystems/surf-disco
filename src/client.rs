@@ -9,7 +9,6 @@ use crate::{
 };
 use async_std::task::sleep;
 use derivative::Derivative;
-use reqwest::header::HeaderMap;
 use serde::de::DeserializeOwned;
 use std::time::{Duration, Instant};
 use vbs::version::StaticVersionType;
@@ -38,6 +37,7 @@ impl From<ContentType> for http::Mime {
 pub struct Client<E, VER: StaticVersionType> {
     inner: reqwest::Client,
     base_url: Url,
+    accept: ContentType,
     _marker: std::marker::PhantomData<fn(E, VER) -> ()>,
 }
 
@@ -133,12 +133,11 @@ impl<E: Error, VER: StaticVersionType> Client<E, VER> {
 
     /// Build an HTTP request with the specified method.
     pub fn request<T: DeserializeOwned>(&self, method: Method, route: &str) -> Request<T, E, VER> {
-        self.inner
-            .request(
-                method.to_string().parse().unwrap(),
-                self.base_url.join(route).unwrap(),
-            )
-            .into()
+        Request::from(self.inner.request(
+            method.to_string().parse().unwrap(),
+            self.base_url.join(route).unwrap(),
+        ))
+        .header("Accept", http::Mime::from(self.accept).to_string())
     }
 
     /// Build a streaming connection request.
@@ -147,7 +146,8 @@ impl<E: Error, VER: StaticVersionType> Client<E, VER> {
     ///
     /// This will panic if a malformed URL is passed.
     pub fn socket(&self, route: &str) -> SocketRequest<E, VER> {
-        self.base_url.join(route).unwrap().into()
+        SocketRequest::new(self.base_url.join(route).unwrap(), self.accept)
+            .header("Accept", http::Mime::from(self.accept).to_string())
     }
 
     /// Create a client for a sub-module of the connected application.
@@ -158,6 +158,7 @@ impl<E: Error, VER: StaticVersionType> Client<E, VER> {
         Ok(Client {
             inner: self.inner.clone(),
             base_url: self.base_url.join(prefix)?,
+            accept: self.accept,
             _marker: Default::default(),
         })
     }
@@ -210,13 +211,6 @@ impl<E: Error, VER: StaticVersionType> ClientBuilder<E, VER> {
     pub fn build(self) -> Client<E, VER> {
         let mut builder = self.inner;
 
-        let mut headers = HeaderMap::default();
-        headers.insert(
-            "Accept",
-            http::Mime::from(self.accept).to_string().parse().unwrap(),
-        );
-        builder = builder.default_headers(headers);
-
         if let Some(timeout) = self.timeout {
             builder = builder.timeout(timeout);
         }
@@ -224,6 +218,7 @@ impl<E: Error, VER: StaticVersionType> ClientBuilder<E, VER> {
         Client {
             inner: builder.build().unwrap(),
             base_url: self.base_url,
+            accept: self.accept,
             _marker: Default::default(),
         }
     }
@@ -251,8 +246,7 @@ mod test {
     type Ver01 = StaticVersion<0, 1>;
     const VER_0_1: Ver01 = StaticVersion {};
 
-    #[async_std::test]
-    async fn test_basic_http_client() {
+    async fn test_basic_http_client(accept: ContentType) {
         setup_logging();
         setup_backtrace();
 
@@ -289,9 +283,11 @@ mod test {
         spawn(app.serve(format!("0.0.0.0:{}", port), VER_0_1));
 
         // Connect a client.
-        let client = Client::<ServerError, Ver01>::new(
+        let client = Client::<ServerError, Ver01>::builder(
             format!("http://localhost:{}", port).parse().unwrap(),
-        );
+        )
+        .content_type(accept)
+        .build();
         assert!(client.connect(None).await);
 
         // Test a couple of basic requests.
@@ -324,7 +320,16 @@ mod test {
     }
 
     #[async_std::test]
-    async fn test_streaming_client() {
+    async fn test_basic_http_client_json() {
+        test_basic_http_client(ContentType::Json).await
+    }
+
+    #[async_std::test]
+    async fn test_basic_http_client_binary() {
+        test_basic_http_client(ContentType::Binary).await
+    }
+
+    async fn test_streaming_client(accept: ContentType) {
         setup_logging();
         setup_backtrace();
 
@@ -353,7 +358,9 @@ mod test {
             })
             .unwrap()
             .stream("naturals", |req, _state| {
-                iter(0..req.integer_param("max").unwrap()).map(Ok).boxed()
+                iter(0u64..req.integer_param("max").unwrap())
+                    .map(Ok)
+                    .boxed()
             })
             .unwrap();
         let port = pick_unused_port().unwrap();
@@ -361,7 +368,9 @@ mod test {
 
         // Connect a client.
         let client: Client<ServerError, _> =
-            Client::new(format!("http://localhost:{}", port).parse().unwrap());
+            Client::builder(format!("http://localhost:{}", port).parse().unwrap())
+                .content_type(accept)
+                .build();
         assert!(client.connect(None).await);
 
         // Test a bidirectional endpoint.
@@ -386,6 +395,16 @@ mod test {
                 .await,
             (0..10).map(Ok).collect::<Vec<_>>()
         );
+    }
+
+    #[async_std::test]
+    async fn test_streaming_client_json() {
+        test_streaming_client(ContentType::Json).await
+    }
+
+    #[async_std::test]
+    async fn test_streaming_client_binary() {
+        test_streaming_client(ContentType::Binary).await
     }
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Serialize)]

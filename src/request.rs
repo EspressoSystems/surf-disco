@@ -201,3 +201,77 @@ pub(crate) fn reqwest_error_msg(err: reqwest::Error) -> String {
         None => err.to_string(),
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::{Client, ContentType};
+    use async_compatibility_layer::logging::{setup_backtrace, setup_logging};
+    use async_std::task::spawn;
+    use futures::FutureExt;
+    use portpicker::pick_unused_port;
+    use tide_disco::{error::ServerError, App};
+    use toml::toml;
+    use vbs::version::StaticVersion;
+
+    type Ver01 = StaticVersion<0, 1>;
+    const VER_0_1: Ver01 = StaticVersion {};
+
+    #[async_std::test]
+    async fn test_request_accept() {
+        setup_logging();
+        setup_backtrace();
+
+        // Set up a simple Tide Disco app.
+        let mut app: App<(), ServerError> = App::with_state(());
+        let api = toml! {
+            [route.get]
+            PATH = ["/get"]
+        };
+        app.module::<ServerError, Ver01>("mod", api)
+            .unwrap()
+            .get("get", |_req, _state| async move { Ok("response") }.boxed())
+            .unwrap();
+        let port = pick_unused_port().unwrap();
+        spawn(app.serve(format!("0.0.0.0:{port}"), VER_0_1));
+
+        // Connect one client with each supported content type.
+        let json_client = Client::<ServerError, Ver01>::builder(
+            format!("http://localhost:{port}").parse().unwrap(),
+        )
+        .content_type(ContentType::Json)
+        .build();
+        assert!(json_client.connect(None).await);
+
+        let bin_client = Client::<ServerError, Ver01>::builder(
+            format!("http://localhost:{port}").parse().unwrap(),
+        )
+        .content_type(ContentType::Binary)
+        .build();
+        assert!(bin_client.connect(None).await);
+
+        // Check that requests built with each client get a response in the desired content type.
+        let res = json_client
+            .get::<String>("mod/get")
+            .inner
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::Ok);
+        assert_eq!(res.headers()["Content-Type"], "application/json");
+        assert_eq!(res.json::<String>().await.unwrap(), "response");
+
+        let res = bin_client
+            .get::<String>("mod/get")
+            .inner
+            .send()
+            .await
+            .unwrap();
+        assert_eq!(res.status(), StatusCode::Ok);
+        assert_eq!(res.headers()["Content-Type"], "application/octet-stream");
+        assert_eq!(
+            Serializer::<Ver01>::deserialize::<String>(&res.bytes().await.unwrap()).unwrap(),
+            "response"
+        );
+    }
+}

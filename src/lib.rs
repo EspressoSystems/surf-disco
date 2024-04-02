@@ -27,7 +27,7 @@ pub mod error;
 pub mod request;
 pub mod socket;
 
-pub use client::Client;
+pub use client::{Client, ContentType};
 pub use error::Error;
 pub use request::Request;
 pub use socket::SocketRequest;
