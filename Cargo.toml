@@ -1,6 +1,6 @@
 [package]
 name = "surf-disco"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["Espresso Systems <hello@espressosys.com>"]
 edition = "2021"
 
@@ -14,12 +14,14 @@ async-tungstenite = { version = "0.13.1", features = [
 derivative = "2.2"
 futures = "0.3"
 hex = "0.4"
+reqwest = "0.12"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-surf = "2.3"
-tide-disco = { git = "https://github.com/EspressoSystems/tide-disco.git", tag = "v0.5.0" }
-versioned-binary-serialization = { git = "https://github.com/EspressoSystems/versioned-binary-serialization.git", tag = "0.1.2" }
+tide-disco = "0.6"
+tracing = "0.1"
+vbs = "0.1"
 
 [dev-dependencies]
+async-compatibility-layer = { version = "1.1", features = ["logging-utils"] }
 portpicker = "0.1"
 toml = "0.8"

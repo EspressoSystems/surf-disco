@@ -4,7 +4,10 @@
 // You should have received a copy of the MIT License
 // along with the surf-disco library. If not, see <https://mit-license.org/>.
 
-use crate::{Error, StatusCode, Url};
+use crate::{
+    http::headers::{HeaderName, ToHeaderValues},
+    Error, StatusCode, Url,
+};
 use async_tungstenite::{
     async_std::{connect_async, ConnectStream},
     tungstenite::{http::request::Builder as RequestBuilder, Error as WsError, Message},
@@ -15,28 +18,23 @@ use futures::{
     Sink, Stream,
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::pin::Pin;
-use surf::http::headers::{HeaderName, ToHeaderValues};
-use versioned_binary_serialization::{version::StaticVersionType, BinarySerializer, Serializer};
+use std::{collections::HashMap, pin::Pin};
+use vbs::{version::StaticVersionType, BinarySerializer, Serializer};
 
 #[must_use]
 #[derive(Debug)]
 pub struct SocketRequest<E, VER: StaticVersionType> {
-    inner: RequestBuilder,
+    url: Url,
+    headers: HashMap<String, Vec<String>>,
     marker: std::marker::PhantomData<fn(E, VER) -> ()>,
 }
 
 impl<E, VER: StaticVersionType> From<Url> for SocketRequest<E, VER> {
     fn from(mut url: Url) -> Self {
         url.set_scheme(&socket_scheme(url.scheme())).unwrap();
-        RequestBuilder::new().uri(url.to_string()).into()
-    }
-}
-
-impl<E, VER: StaticVersionType> From<RequestBuilder> for SocketRequest<E, VER> {
-    fn from(inner: RequestBuilder) -> Self {
         Self {
-            inner,
+            url,
+            headers: Default::default(),
             marker: Default::default(),
         }
     }
@@ -44,24 +42,52 @@ impl<E, VER: StaticVersionType> From<RequestBuilder> for SocketRequest<E, VER> {
 
 impl<E: Error, VER: StaticVersionType> SocketRequest<E, VER> {
     /// Set a header on the request.
-    pub fn header(self, key: impl Into<HeaderName>, values: impl ToHeaderValues) -> Self {
-        let mut req = self.inner;
+    pub fn header(mut self, key: impl Into<HeaderName>, values: impl ToHeaderValues) -> Self {
         let name = key.into().to_string();
         for value in values.to_header_values().unwrap() {
-            req = req.header(&name, value.to_string());
+            self.headers
+                .entry(name.clone())
+                .or_default()
+                .push(value.to_string());
         }
-        req.into()
+        self
     }
 
     /// Start the WebSocket handshake and initiate a connection to the server.
     pub async fn connect<FromServer: DeserializeOwned, ToServer: Serialize + ?Sized>(
-        self,
+        mut self,
     ) -> Result<Connection<FromServer, ToServer, E, VER>, E> {
-        Ok(connect_async(self.inner.body(()).unwrap())
-            .await
-            .map_err(|err| E::catch_all(StatusCode::BadRequest, err.to_string()))?
-            .0
-            .into())
+        // Follow redirects.
+        loop {
+            let mut req = RequestBuilder::new().uri(self.url.to_string());
+            for (key, values) in &self.headers {
+                for value in values {
+                    req = req.header(key, value);
+                }
+            }
+            let req = req
+                .body(())
+                .map_err(|err| E::catch_all(StatusCode::BadRequest, err.to_string()))?;
+
+            let err = match connect_async(req).await {
+                Ok((conn, _)) => return Ok(conn.into()),
+                Err(err) => err,
+            };
+            if let WsError::Http(res) = &err {
+                if (301..=308).contains(&u16::from(res.status())) {
+                    if let Some(location) = res
+                        .headers()
+                        .get("location")
+                        .and_then(|header| header.to_str().ok())
+                    {
+                        tracing::info!(from = %self.url, to = %location, "WS handshake following redirect");
+                        self.url.set_path(location);
+                        continue;
+                    }
+                }
+            }
+            return Err(E::catch_all(StatusCode::BadRequest, err.to_string()));
+        }
     }
 
     /// Initiate a unidirectional connection to the server.
