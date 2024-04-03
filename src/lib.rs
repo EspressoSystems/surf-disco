@@ -10,7 +10,7 @@
 //!
 //! ```
 //! # use surf_disco::{Client, error::ClientError};
-//! # use versioned_binary_serialization::version::StaticVersion;
+//! # use vbs::version::StaticVersion;
 //! # async fn ex() {
 //! let url = "http://localhost:50000".parse().unwrap();
 //! let client: Client<ClientError, StaticVersion<0,1>> = Client::new(url);
@@ -20,31 +20,30 @@
 //!
 use serde::de::DeserializeOwned;
 use std::time::Duration;
-use versioned_binary_serialization::version::StaticVersionType;
+use vbs::version::StaticVersionType;
 
 pub mod client;
 pub mod error;
 pub mod request;
 pub mod socket;
 
-pub use client::Client;
+pub use client::{Client, ContentType};
 pub use error::Error;
 pub use request::Request;
 pub use socket::SocketRequest;
-pub use surf::{
+pub use tide_disco::{
     http::{self, Method},
-    Url,
+    StatusCode, Url,
 };
-pub use tide_disco::StatusCode;
 
 /// Build an HTTP `GET` request.
 pub fn get<T: DeserializeOwned, E: Error, VER: StaticVersionType>(url: Url) -> Request<T, E, VER> {
-    Client::default().get(url.as_ref())
+    Client::new(url).get("/")
 }
 
 /// Build an HTTP `POST` request.
 pub fn post<T: DeserializeOwned, E: Error, VER: StaticVersionType>(url: Url) -> Request<T, E, VER> {
-    Client::default().post(url.as_ref())
+    Client::new(url).post("/")
 }
 
 /// Connect to a server, retrying if the server is not running.

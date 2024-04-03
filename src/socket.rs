@@ -4,7 +4,10 @@
 // You should have received a copy of the MIT License
 // along with the surf-disco library. If not, see <https://mit-license.org/>.
 
-use crate::{Error, StatusCode, Url};
+use crate::{
+    http::headers::{HeaderName, ToHeaderValues},
+    ContentType, Error, StatusCode, Url,
+};
 use async_tungstenite::{
     async_std::{connect_async, ConnectStream},
     tungstenite::{http::request::Builder as RequestBuilder, Error as WsError, Message},
@@ -15,53 +18,76 @@ use futures::{
     Sink, Stream,
 };
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
-use std::pin::Pin;
-use surf::http::headers::{HeaderName, ToHeaderValues};
-use versioned_binary_serialization::{version::StaticVersionType, BinarySerializer, Serializer};
+use std::{collections::HashMap, pin::Pin};
+use vbs::{version::StaticVersionType, BinarySerializer, Serializer};
 
 #[must_use]
 #[derive(Debug)]
 pub struct SocketRequest<E, VER: StaticVersionType> {
-    inner: RequestBuilder,
+    url: Url,
+    content_type: ContentType,
+    headers: HashMap<String, Vec<String>>,
     marker: std::marker::PhantomData<fn(E, VER) -> ()>,
 }
 
-impl<E, VER: StaticVersionType> From<Url> for SocketRequest<E, VER> {
-    fn from(mut url: Url) -> Self {
+impl<E: Error, VER: StaticVersionType> SocketRequest<E, VER> {
+    pub(crate) fn new(mut url: Url, content_type: ContentType) -> Self {
         url.set_scheme(&socket_scheme(url.scheme())).unwrap();
-        RequestBuilder::new().uri(url.to_string()).into()
-    }
-}
-
-impl<E, VER: StaticVersionType> From<RequestBuilder> for SocketRequest<E, VER> {
-    fn from(inner: RequestBuilder) -> Self {
         Self {
-            inner,
+            url,
+            content_type,
+            headers: Default::default(),
             marker: Default::default(),
         }
     }
-}
 
-impl<E: Error, VER: StaticVersionType> SocketRequest<E, VER> {
     /// Set a header on the request.
-    pub fn header(self, key: impl Into<HeaderName>, values: impl ToHeaderValues) -> Self {
-        let mut req = self.inner;
+    pub fn header(mut self, key: impl Into<HeaderName>, values: impl ToHeaderValues) -> Self {
         let name = key.into().to_string();
         for value in values.to_header_values().unwrap() {
-            req = req.header(&name, value.to_string());
+            self.headers
+                .entry(name.clone())
+                .or_default()
+                .push(value.to_string());
         }
-        req.into()
+        self
     }
 
     /// Start the WebSocket handshake and initiate a connection to the server.
     pub async fn connect<FromServer: DeserializeOwned, ToServer: Serialize + ?Sized>(
-        self,
+        mut self,
     ) -> Result<Connection<FromServer, ToServer, E, VER>, E> {
-        Ok(connect_async(self.inner.body(()).unwrap())
-            .await
-            .map_err(|err| E::catch_all(StatusCode::BadRequest, err.to_string()))?
-            .0
-            .into())
+        // Follow redirects.
+        loop {
+            let mut req = RequestBuilder::new().uri(self.url.to_string());
+            for (key, values) in &self.headers {
+                for value in values {
+                    req = req.header(key, value);
+                }
+            }
+            let req = req
+                .body(())
+                .map_err(|err| E::catch_all(StatusCode::BadRequest, err.to_string()))?;
+
+            let err = match connect_async(req).await {
+                Ok((conn, _)) => return Ok(Connection::new(conn, self.content_type)),
+                Err(err) => err,
+            };
+            if let WsError::Http(res) = &err {
+                if (301..=308).contains(&u16::from(res.status())) {
+                    if let Some(location) = res
+                        .headers()
+                        .get("location")
+                        .and_then(|header| header.to_str().ok())
+                    {
+                        tracing::info!(from = %self.url, to = %location, "WS handshake following redirect");
+                        self.url.set_path(location);
+                        continue;
+                    }
+                }
+            }
+            return Err(E::catch_all(StatusCode::BadRequest, err.to_string()));
+        }
     }
 
     /// Initiate a unidirectional connection to the server.
@@ -78,16 +104,18 @@ impl<E: Error, VER: StaticVersionType> SocketRequest<E, VER> {
 /// A bi-directional connection to a WebSocket server.
 pub struct Connection<FromServer, ToServer: ?Sized, E, VER: StaticVersionType> {
     inner: WebSocketStream<ConnectStream>,
+    content_type: ContentType,
     #[allow(clippy::type_complexity)]
     marker: std::marker::PhantomData<fn(FromServer, ToServer, E, VER) -> ()>,
 }
 
-impl<FromServer, ToServer: ?Sized, E, VER: StaticVersionType> From<WebSocketStream<ConnectStream>>
-    for Connection<FromServer, ToServer, E, VER>
+impl<FromServer, ToServer: ?Sized, E, VER: StaticVersionType>
+    Connection<FromServer, ToServer, E, VER>
 {
-    fn from(inner: WebSocketStream<ConnectStream>) -> Self {
+    fn new(inner: WebSocketStream<ConnectStream>, content_type: ContentType) -> Self {
         Self {
             inner,
+            content_type,
             marker: Default::default(),
         }
     }
@@ -115,14 +143,14 @@ impl<FromServer: DeserializeOwned, ToServer: ?Sized, E: Error, VER: StaticVersio
                     Some(Serializer::<VER>::deserialize(&bytes).map_err(|err| {
                         E::catch_all(
                             StatusCode::InternalServerError,
-                            format!("invalid binary serialization: {}", err),
+                            format!("invalid binary: {}\n{bytes:?}", err),
                         )
                     }))
                 }
                 Message::Text(s) => Some(serde_json::from_str(&s).map_err(|err| {
                     E::catch_all(
                         StatusCode::InternalServerError,
-                        format!("invalid JSON: {}", err),
+                        format!("invalid JSON: {}\n{s}", err),
                     )
                 })),
                 Message::Close(_) => None,
@@ -151,12 +179,22 @@ impl<FromServer, ToServer: Serialize + ?Sized, E: Error, VER: StaticVersionType>
     }
 
     fn start_send(self: Pin<&mut Self>, item: &ToServer) -> Result<(), Self::Error> {
-        let msg = Message::Binary(Serializer::<VER>::serialize(item).map_err(|err| {
-            E::catch_all(
-                StatusCode::BadRequest,
-                format!("invalid binary serialization: {}", err),
-            )
-        })?);
+        let msg = match self.content_type {
+            ContentType::Binary => {
+                Message::Binary(Serializer::<VER>::serialize(item).map_err(|err| {
+                    E::catch_all(
+                        StatusCode::BadRequest,
+                        format!("invalid binary serialization: {}", err),
+                    )
+                })?)
+            }
+            ContentType::Json => Message::Text(serde_json::to_string(item).map_err(|err| {
+                E::catch_all(
+                    StatusCode::BadRequest,
+                    format!("invalid JSON serialization: {}", err),
+                )
+            })?),
+        };
         self.pinned_inner().start_send(msg).map_err(|err| {
             E::catch_all(
                 StatusCode::InternalServerError,
@@ -252,4 +290,81 @@ fn socket_scheme(scheme: &str) -> String {
         _ => scheme,
     }
     .to_string()
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::{Client, ContentType};
+    use async_compatibility_layer::logging::{setup_backtrace, setup_logging};
+    use async_std::task::spawn;
+    use futures::stream::{repeat, StreamExt};
+    use portpicker::pick_unused_port;
+    use tide_disco::{error::ServerError, App};
+    use toml::toml;
+    use vbs::version::StaticVersion;
+
+    type Ver01 = StaticVersion<0, 1>;
+    const VER_0_1: Ver01 = StaticVersion {};
+
+    #[async_std::test]
+    async fn test_socket_accept() {
+        setup_logging();
+        setup_backtrace();
+
+        // Set up a simple Tide Disco app.
+        let mut app: App<(), ServerError> = App::with_state(());
+        let api = toml! {
+            [route.subscribe]
+            PATH = ["/subscribe"]
+            METHOD = "SOCKET"
+        };
+        app.module::<ServerError, Ver01>("mod", api)
+            .unwrap()
+            .stream("subscribe", |_req, _state| {
+                repeat("response").map(Ok).boxed()
+            })
+            .unwrap();
+        let port = pick_unused_port().unwrap();
+        spawn(app.serve(format!("0.0.0.0:{port}"), VER_0_1));
+
+        // Connect one client with each supported content type.
+        let json_client = Client::<ServerError, Ver01>::builder(
+            format!("http://localhost:{port}").parse().unwrap(),
+        )
+        .content_type(ContentType::Json)
+        .build();
+        assert!(json_client.connect(None).await);
+
+        let bin_client = Client::<ServerError, Ver01>::builder(
+            format!("http://localhost:{port}").parse().unwrap(),
+        )
+        .content_type(ContentType::Binary)
+        .build();
+        assert!(bin_client.connect(None).await);
+
+        // Check that connections built with each client get messages in the desired content type.
+        let mut conn = json_client
+            .socket("mod/subscribe")
+            .subscribe::<String>()
+            .await
+            .unwrap();
+        let Message::Text(msg) = conn.inner.next().await.unwrap().unwrap() else {
+            panic!("unexpected content type");
+        };
+        assert_eq!(serde_json::from_str::<String>(&msg).unwrap(), "response");
+
+        let mut conn = bin_client
+            .socket("mod/subscribe")
+            .subscribe::<String>()
+            .await
+            .unwrap();
+        let Message::Binary(msg) = conn.inner.next().await.unwrap().unwrap() else {
+            panic!("unexpected content type");
+        };
+        assert_eq!(
+            Serializer::<Ver01>::deserialize::<String>(&msg).unwrap(),
+            "response"
+        );
+    }
 }
