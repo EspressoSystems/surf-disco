@@ -1,8 +1,10 @@
 [package]
 name = "surf-disco"
+description = "HTTP client for use with tide-disco applications"
 version = "0.6.0"
 authors = ["Espresso Systems <hello@espressosys.com>"]
 edition = "2021"
+license-file = "LICENSE"
 
 [dependencies]
 async-std = { version = "1.12", features = ["attributes"] }
