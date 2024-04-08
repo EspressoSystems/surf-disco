@@ -9,6 +9,9 @@ on:
 jobs:
   coverage:
     runs-on: ubuntu-latest
+    env:
+        RUST_LOG: info
+        RUSTFLAGS: "--cfg async_executor_impl=\"async-std\" --cfg async_channel_impl=\"async-std\""
     steps:
       - uses: actions/checkout@v4
         name: Checkout Repository
