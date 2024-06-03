@@ -8,7 +8,7 @@ license-file = "LICENSE"
 
 [dependencies]
 async-std = { version = "1.12", features = ["attributes"] }
-async-tungstenite = { version = "0.13.1", features = [
+async-tungstenite = { version = "0.26.0", features = [
     "async-std-runtime",
     "async-tls",
     "async-native-tls",
