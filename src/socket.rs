@@ -67,7 +67,7 @@ impl<E: Error, VER: StaticVersionType> SocketRequest<E, VER> {
             }
             let req = req
                 .body(())
-                .map_err(|err| E::catch_all(StatusCode::BadRequest, err.to_string()))?;
+                .map_err(|err| E::catch_all(StatusCode::BAD_REQUEST, err.to_string()))?;
 
             let err = match connect_async(req).await {
                 Ok((conn, _)) => return Ok(Connection::new(conn, self.content_type)),
@@ -86,7 +86,7 @@ impl<E: Error, VER: StaticVersionType> SocketRequest<E, VER> {
                     }
                 }
             }
-            return Err(E::catch_all(StatusCode::BadRequest, err.to_string()));
+            return Err(E::catch_all(StatusCode::BAD_REQUEST, err.to_string()));
         }
     }
 
@@ -134,7 +134,7 @@ impl<FromServer: DeserializeOwned, ToServer: ?Sized, E: Error, VER: StaticVersio
             Poll::Ready(Some(Err(err))) => match err {
                 WsError::ConnectionClosed | WsError::AlreadyClosed => Poll::Ready(None),
                 err => Poll::Ready(Some(Err(E::catch_all(
-                    StatusCode::InternalServerError,
+                    StatusCode::INTERNAL_SERVER_ERROR,
                     err.to_string(),
                 )))),
             },
@@ -142,20 +142,20 @@ impl<FromServer: DeserializeOwned, ToServer: ?Sized, E: Error, VER: StaticVersio
                 Message::Binary(bytes) => {
                     Some(Serializer::<VER>::deserialize(&bytes).map_err(|err| {
                         E::catch_all(
-                            StatusCode::InternalServerError,
+                            StatusCode::INTERNAL_SERVER_ERROR,
                             format!("invalid binary: {}\n{bytes:?}", err),
                         )
                     }))
                 }
                 Message::Text(s) => Some(serde_json::from_str(&s).map_err(|err| {
                     E::catch_all(
-                        StatusCode::InternalServerError,
+                        StatusCode::INTERNAL_SERVER_ERROR,
                         format!("invalid JSON: {}\n{s}", err),
                     )
                 })),
                 Message::Close(_) => None,
                 _ => Some(Err(E::catch_all(
-                    StatusCode::UnsupportedMediaType,
+                    StatusCode::UNSUPPORTED_MEDIA_TYPE,
                     "unsupported WebSocket message".into(),
                 ))),
             }),
@@ -172,7 +172,7 @@ impl<FromServer, ToServer: Serialize + ?Sized, E: Error, VER: StaticVersionType>
     fn poll_ready(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.pinned_inner().poll_ready(cx).map_err(|err| {
             E::catch_all(
-                StatusCode::InternalServerError,
+                StatusCode::INTERNAL_SERVER_ERROR,
                 format!("error in WebSocket connection: {}", err),
             )
         })
@@ -183,21 +183,21 @@ impl<FromServer, ToServer: Serialize + ?Sized, E: Error, VER: StaticVersionType>
             ContentType::Binary => {
                 Message::Binary(Serializer::<VER>::serialize(item).map_err(|err| {
                     E::catch_all(
-                        StatusCode::BadRequest,
+                        StatusCode::BAD_REQUEST,
                         format!("invalid binary serialization: {}", err),
                     )
                 })?)
             }
             ContentType::Json => Message::Text(serde_json::to_string(item).map_err(|err| {
                 E::catch_all(
-                    StatusCode::BadRequest,
+                    StatusCode::BAD_REQUEST,
                     format!("invalid JSON serialization: {}", err),
                 )
             })?),
         };
         self.pinned_inner().start_send(msg).map_err(|err| {
             E::catch_all(
-                StatusCode::InternalServerError,
+                StatusCode::INTERNAL_SERVER_ERROR,
                 format!("error sending WebSocket message: {}", err),
             )
         })
@@ -206,7 +206,7 @@ impl<FromServer, ToServer: Serialize + ?Sized, E: Error, VER: StaticVersionType>
     fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.pinned_inner().poll_flush(cx).map_err(|err| {
             E::catch_all(
-                StatusCode::InternalServerError,
+                StatusCode::INTERNAL_SERVER_ERROR,
                 format!("error in WebSocket connection: {}", err),
             )
         })
@@ -215,7 +215,7 @@ impl<FromServer, ToServer: Serialize + ?Sized, E: Error, VER: StaticVersionType>
     fn poll_close(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         self.pinned_inner().poll_close(cx).map_err(|err| {
             E::catch_all(
-                StatusCode::InternalServerError,
+                StatusCode::INTERNAL_SERVER_ERROR,
                 format!("error in WebSocket connection: {}", err),
             )
         })

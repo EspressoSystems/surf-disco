@@ -73,7 +73,7 @@ impl<E: Error, VER: StaticVersionType> Client<E, VER> {
                 .send()
                 .await
             {
-                Ok(res) if res.status() == StatusCode::Ok => return true,
+                Ok(res) if res.status() == StatusCode::OK => return true,
                 Ok(res) => {
                     tracing::info!(
                         url = %self.base_url,
@@ -271,7 +271,7 @@ mod test {
                         Ok("response")
                     } else {
                         Err(ServerError::catch_all(
-                            StatusCode::BadRequest,
+                            StatusCode::BAD_REQUEST,
                             "invalid body".into(),
                         ))
                     }
@@ -314,7 +314,7 @@ mod test {
             .send()
             .await
             .unwrap_err();
-        if err.status != StatusCode::BadRequest || err.message != "invalid body" {
+        if err.status != StatusCode::BAD_REQUEST || err.message != "invalid body" {
             panic!("unexpected error {}", err);
         }
     }
@@ -415,7 +415,7 @@ mod test {
 
     impl super::HealthCheck for HealthCheck {
         fn status(&self) -> StatusCode {
-            StatusCode::Ok
+            StatusCode::OK
         }
     }
 
