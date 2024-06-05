@@ -68,7 +68,7 @@ impl<T: DeserializeOwned, E: Error, VER: StaticVersionType> Request<T, E, VER> {
 
     /// Send the request and await a response from the server.
     ///
-    /// If the request succeeds (receives a response with [StatusCode::Ok]) the response body is
+    /// If the request succeeds (receives a response with [StatusCode::OK]) the response body is
     /// converted to a `T`, using a format determined by the `Content-Type` header of the request.
     ///
     /// # Errors
@@ -76,7 +76,7 @@ impl<T: DeserializeOwned, E: Error, VER: StaticVersionType> Request<T, E, VER> {
     /// If the client is unable to reach the server, or if the response body cannot be interpreted
     /// as a `T`, an error message is created using [catch_all](Error::catch_all) and returned.
     ///
-    /// If the request completes but the response status code is not [StatusCode::Ok], an error
+    /// If the request completes but the response status code is not [StatusCode::OK], an error
     /// message is constructed using the body of the response. If there is a body and it can be
     /// converted to an `E` using the content type specified in the response's `Content-Type`
     /// header, that `E` will be returned directly. Otherwise, an error message is synthesized using
@@ -85,7 +85,7 @@ impl<T: DeserializeOwned, E: Error, VER: StaticVersionType> Request<T, E, VER> {
         let res = self.inner.send().await.map_err(reqwest_error)?;
         let status = res.status();
         let content_type = res.headers().get("Content-Type").cloned();
-        if res.status() == StatusCode::Ok {
+        if res.status() == StatusCode::OK {
             // If the response indicates success, deserialize the body using a format determined by
             // the Content-Type header.
             if let Some(content_type) = content_type {
@@ -106,14 +106,14 @@ impl<T: DeserializeOwned, E: Error, VER: StaticVersionType> Request<T, E, VER> {
                             Err(_) => String::default(),
                         };
                         Err(E::catch_all(
-                            StatusCode::UnsupportedMediaType,
+                            StatusCode::UNSUPPORTED_MEDIA_TYPE,
                             format!("unsupported content type {content_type:?} {msg}"),
                         ))
                     }
                 }
             } else {
                 Err(E::catch_all(
-                    StatusCode::UnsupportedMediaType,
+                    StatusCode::UNSUPPORTED_MEDIA_TYPE,
                     "unspecified content type in response".into(),
                 ))
             }
@@ -182,7 +182,7 @@ impl<T: DeserializeOwned, E: Error, VER: StaticVersionType> Request<T, E, VER> {
 }
 
 fn request_error<E: Error>(source: impl Display) -> E {
-    E::catch_all(StatusCode::BadRequest, source.to_string())
+    E::catch_all(StatusCode::BAD_REQUEST, source.to_string())
 }
 
 fn reqwest_error<E: Error>(source: reqwest::Error) -> E {
@@ -257,7 +257,7 @@ mod test {
             .send()
             .await
             .unwrap();
-        assert_eq!(res.status(), StatusCode::Ok);
+        assert_eq!(res.status(), StatusCode::OK);
         assert_eq!(res.headers()["Content-Type"], "application/json");
         assert_eq!(res.json::<String>().await.unwrap(), "response");
 
@@ -267,7 +267,7 @@ mod test {
             .send()
             .await
             .unwrap();
-        assert_eq!(res.status(), StatusCode::Ok);
+        assert_eq!(res.status(), StatusCode::OK);
         assert_eq!(res.headers()["Content-Type"], "application/octet-stream");
         assert_eq!(
             Serializer::<Ver01>::deserialize::<String>(&res.bytes().await.unwrap()).unwrap(),
