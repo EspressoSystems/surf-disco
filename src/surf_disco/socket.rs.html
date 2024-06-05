@@ -439,7 +439,7 @@
             }
             <span class="kw">let </span>req = req
                 .body(())
-                .map_err(|err| E::catch_all(StatusCode::BadRequest, err.to_string()))<span class="question-mark">?</span>;
+                .map_err(|err| E::catch_all(StatusCode::BAD_REQUEST, err.to_string()))<span class="question-mark">?</span>;
 
             <span class="kw">let </span>err = <span class="kw">match </span>connect_async(req).<span class="kw">await </span>{
                 <span class="prelude-val">Ok</span>((conn, <span class="kw">_</span>)) =&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(Connection::new(conn, <span class="self">self</span>.content_type)),
@@ -458,7 +458,7 @@
                     }
                 }
             }
-            <span class="kw">return </span><span class="prelude-val">Err</span>(E::catch_all(StatusCode::BadRequest, err.to_string()));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(E::catch_all(StatusCode::BAD_REQUEST, err.to_string()));
         }
     }
 
@@ -506,7 +506,7 @@
             Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(err))) =&gt; <span class="kw">match </span>err {
                 WsError::ConnectionClosed | WsError::AlreadyClosed =&gt; Poll::Ready(<span class="prelude-val">None</span>),
                 err =&gt; Poll::Ready(<span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(E::catch_all(
-                    StatusCode::InternalServerError,
+                    StatusCode::INTERNAL_SERVER_ERROR,
                     err.to_string(),
                 )))),
             },
@@ -514,20 +514,20 @@
                 Message::Binary(bytes) =&gt; {
                     <span class="prelude-val">Some</span>(Serializer::&lt;VER&gt;::deserialize(<span class="kw-2">&amp;</span>bytes).map_err(|err| {
                         E::catch_all(
-                            StatusCode::InternalServerError,
+                            StatusCode::INTERNAL_SERVER_ERROR,
                             <span class="macro">format!</span>(<span class="string">"invalid binary: {}\n{bytes:?}"</span>, err),
                         )
                     }))
                 }
                 Message::Text(s) =&gt; <span class="prelude-val">Some</span>(serde_json::from_str(<span class="kw-2">&amp;</span>s).map_err(|err| {
                     E::catch_all(
-                        StatusCode::InternalServerError,
+                        StatusCode::INTERNAL_SERVER_ERROR,
                         <span class="macro">format!</span>(<span class="string">"invalid JSON: {}\n{s}"</span>, err),
                     )
                 })),
                 Message::Close(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">Some</span>(<span class="prelude-val">Err</span>(E::catch_all(
-                    StatusCode::UnsupportedMediaType,
+                    StatusCode::UNSUPPORTED_MEDIA_TYPE,
                     <span class="string">"unsupported WebSocket message"</span>.into(),
                 ))),
             }),
@@ -544,7 +544,7 @@
     <span class="kw">fn </span>poll_ready(<span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;&gt; {
         <span class="self">self</span>.pinned_inner().poll_ready(cx).map_err(|err| {
             E::catch_all(
-                StatusCode::InternalServerError,
+                StatusCode::INTERNAL_SERVER_ERROR,
                 <span class="macro">format!</span>(<span class="string">"error in WebSocket connection: {}"</span>, err),
             )
         })
@@ -555,21 +555,21 @@
             ContentType::Binary =&gt; {
                 Message::Binary(Serializer::&lt;VER&gt;::serialize(item).map_err(|err| {
                     E::catch_all(
-                        StatusCode::BadRequest,
+                        StatusCode::BAD_REQUEST,
                         <span class="macro">format!</span>(<span class="string">"invalid binary serialization: {}"</span>, err),
                     )
                 })<span class="question-mark">?</span>)
             }
             ContentType::Json =&gt; Message::Text(serde_json::to_string(item).map_err(|err| {
                 E::catch_all(
-                    StatusCode::BadRequest,
+                    StatusCode::BAD_REQUEST,
                     <span class="macro">format!</span>(<span class="string">"invalid JSON serialization: {}"</span>, err),
                 )
             })<span class="question-mark">?</span>),
         };
         <span class="self">self</span>.pinned_inner().start_send(msg).map_err(|err| {
             E::catch_all(
-                StatusCode::InternalServerError,
+                StatusCode::INTERNAL_SERVER_ERROR,
                 <span class="macro">format!</span>(<span class="string">"error sending WebSocket message: {}"</span>, err),
             )
         })
@@ -578,7 +578,7 @@
     <span class="kw">fn </span>poll_flush(<span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;&gt; {
         <span class="self">self</span>.pinned_inner().poll_flush(cx).map_err(|err| {
             E::catch_all(
-                StatusCode::InternalServerError,
+                StatusCode::INTERNAL_SERVER_ERROR,
                 <span class="macro">format!</span>(<span class="string">"error in WebSocket connection: {}"</span>, err),
             )
         })
@@ -587,7 +587,7 @@
     <span class="kw">fn </span>poll_close(<span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, cx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt;&gt; {
         <span class="self">self</span>.pinned_inner().poll_close(cx).map_err(|err| {
             E::catch_all(
-                StatusCode::InternalServerError,
+                StatusCode::INTERNAL_SERVER_ERROR,
                 <span class="macro">format!</span>(<span class="string">"error in WebSocket connection: {}"</span>, err),
             )
         })

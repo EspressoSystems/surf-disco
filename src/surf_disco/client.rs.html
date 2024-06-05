@@ -565,7 +565,7 @@
                 .send()
                 .<span class="kw">await
             </span>{
-                <span class="prelude-val">Ok</span>(res) <span class="kw">if </span>res.status() == StatusCode::Ok =&gt; <span class="kw">return </span><span class="bool-val">true</span>,
+                <span class="prelude-val">Ok</span>(res) <span class="kw">if </span>res.status() == StatusCode::OK =&gt; <span class="kw">return </span><span class="bool-val">true</span>,
                 <span class="prelude-val">Ok</span>(res) =&gt; {
                     <span class="macro">tracing::info!</span>(
                         url = %<span class="self">self</span>.base_url,
@@ -763,7 +763,7 @@
                         <span class="prelude-val">Ok</span>(<span class="string">"response"</span>)
                     } <span class="kw">else </span>{
                         <span class="prelude-val">Err</span>(ServerError::catch_all(
-                            StatusCode::BadRequest,
+                            StatusCode::BAD_REQUEST,
                             <span class="string">"invalid body"</span>.into(),
                         ))
                     }
@@ -806,7 +806,7 @@
             .send()
             .<span class="kw">await
             </span>.unwrap_err();
-        <span class="kw">if </span>err.status != StatusCode::BadRequest || err.message != <span class="string">"invalid body" </span>{
+        <span class="kw">if </span>err.status != StatusCode::BAD_REQUEST || err.message != <span class="string">"invalid body" </span>{
             <span class="macro">panic!</span>(<span class="string">"unexpected error {}"</span>, err);
         }
     }
@@ -907,7 +907,7 @@
 
     <span class="kw">impl </span><span class="kw">super</span>::HealthCheck <span class="kw">for </span>HealthCheck {
         <span class="kw">fn </span>status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; StatusCode {
-            StatusCode::Ok
+            StatusCode::OK
         }
     }
 

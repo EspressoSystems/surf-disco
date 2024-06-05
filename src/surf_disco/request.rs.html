@@ -347,7 +347,7 @@
 
     <span class="doccomment">/// Send the request and await a response from the server.
     ///
-    /// If the request succeeds (receives a response with [StatusCode::Ok]) the response body is
+    /// If the request succeeds (receives a response with [StatusCode::OK]) the response body is
     /// converted to a `T`, using a format determined by the `Content-Type` header of the request.
     ///
     /// # Errors
@@ -355,7 +355,7 @@
     /// If the client is unable to reach the server, or if the response body cannot be interpreted
     /// as a `T`, an error message is created using [catch_all](Error::catch_all) and returned.
     ///
-    /// If the request completes but the response status code is not [StatusCode::Ok], an error
+    /// If the request completes but the response status code is not [StatusCode::OK], an error
     /// message is constructed using the body of the response. If there is a body and it can be
     /// converted to an `E` using the content type specified in the response's `Content-Type`
     /// header, that `E` will be returned directly. Otherwise, an error message is synthesized using
@@ -364,7 +364,7 @@
         <span class="kw">let </span>res = <span class="self">self</span>.inner.send().<span class="kw">await</span>.map_err(reqwest_error)<span class="question-mark">?</span>;
         <span class="kw">let </span>status = res.status();
         <span class="kw">let </span>content_type = res.headers().get(<span class="string">"Content-Type"</span>).cloned();
-        <span class="kw">if </span>res.status() == StatusCode::Ok {
+        <span class="kw">if </span>res.status() == StatusCode::OK {
             <span class="comment">// If the response indicates success, deserialize the body using a format determined by
             // the Content-Type header.
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(content_type) = content_type {
@@ -385,14 +385,14 @@
                             <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; String::default(),
                         };
                         <span class="prelude-val">Err</span>(E::catch_all(
-                            StatusCode::UnsupportedMediaType,
+                            StatusCode::UNSUPPORTED_MEDIA_TYPE,
                             <span class="macro">format!</span>(<span class="string">"unsupported content type {content_type:?} {msg}"</span>),
                         ))
                     }
                 }
             } <span class="kw">else </span>{
                 <span class="prelude-val">Err</span>(E::catch_all(
-                    StatusCode::UnsupportedMediaType,
+                    StatusCode::UNSUPPORTED_MEDIA_TYPE,
                     <span class="string">"unspecified content type in response"</span>.into(),
                 ))
             }
@@ -461,7 +461,7 @@
 }
 
 <span class="kw">fn </span>request_error&lt;E: Error&gt;(source: <span class="kw">impl </span>Display) -&gt; E {
-    E::catch_all(StatusCode::BadRequest, source.to_string())
+    E::catch_all(StatusCode::BAD_REQUEST, source.to_string())
 }
 
 <span class="kw">fn </span>reqwest_error&lt;E: Error&gt;(source: reqwest::Error) -&gt; E {
@@ -536,7 +536,7 @@
             .send()
             .<span class="kw">await
             </span>.unwrap();
-        <span class="macro">assert_eq!</span>(res.status(), StatusCode::Ok);
+        <span class="macro">assert_eq!</span>(res.status(), StatusCode::OK);
         <span class="macro">assert_eq!</span>(res.headers()[<span class="string">"Content-Type"</span>], <span class="string">"application/json"</span>);
         <span class="macro">assert_eq!</span>(res.json::&lt;String&gt;().<span class="kw">await</span>.unwrap(), <span class="string">"response"</span>);
 
@@ -546,7 +546,7 @@
             .send()
             .<span class="kw">await
             </span>.unwrap();
-        <span class="macro">assert_eq!</span>(res.status(), StatusCode::Ok);
+        <span class="macro">assert_eq!</span>(res.status(), StatusCode::OK);
         <span class="macro">assert_eq!</span>(res.headers()[<span class="string">"Content-Type"</span>], <span class="string">"application/octet-stream"</span>);
         <span class="macro">assert_eq!</span>(
             Serializer::&lt;Ver01&gt;::deserialize::&lt;String&gt;(<span class="kw-2">&amp;</span>res.bytes().<span class="kw">await</span>.unwrap()).unwrap(),
