@@ -1,14 +1,14 @@
 [package]
 name = "surf-disco"
 description = "HTTP client for use with tide-disco applications"
-version = "0.9.0"
+version = "0.9.1"
 authors = ["Espresso Systems <hello@espressosys.com>"]
 edition = "2021"
 license-file = "LICENSE"
 
 [dependencies]
 async-std = { version = "1.12", features = ["attributes"] }
-async-tungstenite = { version = "0.13.1", features = [
+async-tungstenite = { version = "0.25", features = [
     "async-std-runtime",
     "async-tls",
     "async-native-tls",
