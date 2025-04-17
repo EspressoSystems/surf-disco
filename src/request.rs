@@ -8,6 +8,7 @@ use crate::{
     http::headers::{HeaderName, ToHeaderValues},
     Error, StatusCode,
 };
+use bytes::Bytes;
 use serde::{de::DeserializeOwned, Serialize};
 use std::{error::Error as _, fmt::Display};
 use vbs::{version::StaticVersionType, BinarySerializer, Serializer};
@@ -64,6 +65,13 @@ impl<T: DeserializeOwned, E: Error, VER: StaticVersionType> Request<T, E, VER> {
             .inner
             .body(Serializer::<VER>::serialize(body).map_err(request_error)?)
             .into())
+    }
+
+
+    /// This function returns the full response body as bytes
+    pub async fn bytes(self) -> Result<Bytes, E> {
+        let res = self.inner.send().await.map_err(reqwest_error)?;
+       res.bytes().await.map_err(reqwest_error)
     }
 
     /// Send the request and await a response from the server.
