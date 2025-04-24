@@ -66,6 +66,12 @@ impl<T: DeserializeOwned, E: Error, VER: StaticVersionType> Request<T, E, VER> {
             .into())
     }
 
+    /// This function returns the full response body as bytes
+    pub async fn bytes(self) -> Result<Vec<u8>, E> {
+        let res = self.inner.send().await.map_err(reqwest_error)?;
+        res.bytes().await.map(|b| b.to_vec()).map_err(reqwest_error)
+    }
+
     /// Send the request and await a response from the server.
     ///
     /// If the request succeeds (receives a response with [StatusCode::OK]) the response body is
