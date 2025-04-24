@@ -1,3 +1,9 @@
-(function() {var implementors = {
-"surf_disco":[["impl&lt;FromServer, ToServer: <a class=\"trait\" href=\"https://docs.rs/serde/1.0.203/serde/ser/trait.Serialize.html\" title=\"trait serde::ser::Serialize\">Serialize</a> + ?<a class=\"trait\" href=\"https://doc.rust-lang.org/1.79.0/core/marker/trait.Sized.html\" title=\"trait core::marker::Sized\">Sized</a>, E: <a class=\"trait\" href=\"surf_disco/trait.Error.html\" title=\"trait surf_disco::Error\">Error</a>, VER: StaticVersionType&gt; Sink&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/1.79.0/std/primitive.reference.html\">&amp;ToServer</a>&gt; for <a class=\"struct\" href=\"surf_disco/socket/struct.Connection.html\" title=\"struct surf_disco::socket::Connection\">Connection</a>&lt;FromServer, ToServer, E, VER&gt;"]]
-};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
+(function() {
+    var implementors = Object.fromEntries([["surf_disco",[["impl&lt;FromServer, ToServer: <a class=\"trait\" href=\"https://docs.rs/serde/1.0.219/serde/ser/trait.Serialize.html\" title=\"trait serde::ser::Serialize\">Serialize</a> + ?<a class=\"trait\" href=\"https://doc.rust-lang.org/1.86.0/core/marker/trait.Sized.html\" title=\"trait core::marker::Sized\">Sized</a>, E: <a class=\"trait\" href=\"surf_disco/trait.Error.html\" title=\"trait surf_disco::Error\">Error</a>, VER: StaticVersionType&gt; Sink&lt;<a class=\"primitive\" href=\"https://doc.rust-lang.org/1.86.0/std/primitive.reference.html\">&amp;ToServer</a>&gt; for <a class=\"struct\" href=\"surf_disco/socket/struct.Connection.html\" title=\"struct surf_disco::socket::Connection\">Connection</a>&lt;FromServer, ToServer, E, VER&gt;"]]]]);
+    if (window.register_implementors) {
+        window.register_implementors(implementors);
+    } else {
+        window.pending_implementors = implementors;
+    }
+})()
+//{"start":57,"fragment_lengths":[759]}
