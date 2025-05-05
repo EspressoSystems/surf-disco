@@ -181,7 +181,6 @@ impl<T: DeserializeOwned, E: Error, VER: StaticVersionType> Request<T, E, VER> {
     }
 
     /// Sends the request and returns the full response body as raw bytes,
-    /// with content-type validation
     pub async fn bytes(self) -> Result<Vec<u8>, E> {
         let response = self.inner.send().await.map_err(reqwest_error)?;
         let status = response.status();
@@ -196,51 +195,26 @@ impl<T: DeserializeOwned, E: Error, VER: StaticVersionType> Request<T, E, VER> {
         );
 
         if status.is_success() {
-            // For successful responses, validate the content type
-            if let Some(content_type) = content_type {
-                match content_type.to_str() {
-                    Ok("application/json") | Ok("application/octet-stream") => {
-                        return bytes_result;
-                    }
-                    content_type => {
-                        let msg = match bytes_result {
-                            Ok(bytes) => match std::str::from_utf8(&bytes) {
-                                Ok(s) => format!("body: {}", s),
-                                Err(_) => format!("body: {}", hex::encode(&bytes)),
-                            },
-                            Err(_) => String::default(),
-                        };
-                        Err(E::catch_all(
-                            StatusCode::UNSUPPORTED_MEDIA_TYPE,
-                            format!("unsupported content type {content_type:?} {msg}"),
-                        ))
-                    }
-                }
-            } else {
-                Err(E::catch_all(
-                    StatusCode::UNSUPPORTED_MEDIA_TYPE,
-                    "unspecified content type in response".into(),
-                ))
-            }
-        } else {
-            let bytes = bytes_result?;
-
-            if let Ok(msg) = std::str::from_utf8(&bytes) {
-                return Err(E::catch_all(status.into(), msg.to_string()));
-            }
-
-            Err(E::catch_all(
-                status.into(),
-                format!(
-                    "Request failed with status {status}. Content-Type: {}. Body: 0x{}",
-                    content_type
-                        .as_ref()
-                        .and_then(|v| v.to_str().ok())
-                        .unwrap_or("unspecified"),
-                    hex::encode(&bytes),
-                ),
-            ))
+            return bytes_result;
         }
+
+        let bytes = bytes_result?;
+
+        if let Ok(msg) = std::str::from_utf8(&bytes) {
+            return Err(E::catch_all(status.into(), msg.to_string()));
+        }
+
+        Err(E::catch_all(
+            status.into(),
+            format!(
+                "Request failed with status {status}. Content-Type: {}. Body: 0x{}",
+                content_type
+                    .as_ref()
+                    .and_then(|v| v.to_str().ok())
+                    .unwrap_or("unspecified"),
+                hex::encode(&bytes),
+            ),
+        ))
     }
 }
 
