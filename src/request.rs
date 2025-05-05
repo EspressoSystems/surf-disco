@@ -66,12 +66,6 @@ impl<T: DeserializeOwned, E: Error, VER: StaticVersionType> Request<T, E, VER> {
             .into())
     }
 
-    /// This function returns the full response body as bytes
-    pub async fn bytes(self) -> Result<Vec<u8>, E> {
-        let res = self.inner.send().await.map_err(reqwest_error)?;
-        res.bytes().await.map(|b| b.to_vec()).map_err(reqwest_error)
-    }
-
     /// Send the request and await a response from the server.
     ///
     /// If the request succeeds (receives a response with [StatusCode::OK]) the response body is
@@ -185,6 +179,43 @@ impl<T: DeserializeOwned, E: Error, VER: StaticVersionType> Request<T, E, VER> {
             ))
         }
     }
+
+    /// Sends the request and returns the full response body as raw bytes,
+    pub async fn bytes(self) -> Result<Vec<u8>, E> {
+        let response = self.inner.send().await.map_err(reqwest_error)?;
+        let status = response.status();
+        let content_type = response.headers().get("Content-Type").cloned();
+
+        let bytes_result = response.bytes().await.map(|b| b.to_vec()).map_err(|err| E::catch_all(
+                status.into(),
+                format!(
+                    "Request terminated with error {status}. Failed to read request body due to {err}",
+                ),
+            )
+        );
+
+        if status.is_success() {
+            return bytes_result;
+        }
+
+        let bytes = bytes_result?;
+
+        if let Ok(msg) = std::str::from_utf8(&bytes) {
+            return Err(E::catch_all(status.into(), msg.to_string()));
+        }
+
+        Err(E::catch_all(
+            status.into(),
+            format!(
+                "Request failed with status {status}. Content-Type: {}. Body: 0x{}",
+                content_type
+                    .as_ref()
+                    .and_then(|v| v.to_str().ok())
+                    .unwrap_or("unspecified"),
+                hex::encode(&bytes),
+            ),
+        ))
+    }
 }
 
 fn request_error<E: Error>(source: impl Display) -> E {
@@ -278,6 +309,50 @@ mod test {
         assert_eq!(
             Serializer::<Ver01>::deserialize::<String>(&res.bytes().await.unwrap()).unwrap(),
             "response"
+        );
+    }
+
+    #[async_std::test]
+    async fn test_bad_response_bytes() {
+        setup_logging();
+        setup_backtrace();
+
+        // Set up a simple Tide Disco app.
+        let mut app: App<(), ServerError> = App::with_state(());
+        let api = toml! {
+            [route.integer]
+            PATH = ["/integer"]
+        };
+
+        app.module::<ServerError, Ver01>("app", api)
+            .unwrap()
+            .get::<_, u64>("integer", |_req, _state| {
+                async move {
+                    Err(ServerError::catch_all(
+                        StatusCode::NOT_FOUND,
+                        "not found".to_string(),
+                    ))
+                }
+                .boxed()
+            })
+            .unwrap();
+
+        let port = pick_unused_port().unwrap();
+        spawn(app.serve(format!("0.0.0.0:{port}"), VER_0_1));
+
+        // Connect client
+        let client = Client::<ServerError, Ver01>::builder(
+            format!("http://localhost:{port}").parse().unwrap(),
+        )
+        .build();
+        assert!(client.connect(None).await);
+
+        // Make a request and expect the .bytes() call to fail
+        let result = client.get::<()>("app/integer").bytes().await;
+
+        assert!(
+            result.is_err(),
+            "Expected error from .bytes() due to server-side failure"
         );
     }
 }
