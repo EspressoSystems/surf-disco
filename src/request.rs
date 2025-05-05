@@ -70,7 +70,11 @@ impl<T: DeserializeOwned, E: Error, VER: StaticVersionType> Request<T, E, VER> {
     pub async fn bytes(self) -> Result<Vec<u8>, E> {
         let response = self.inner.send().await.map_err(reqwest_error)?;
         let successful_response = response.error_for_status().map_err(reqwest_error)?;
-        successful_response.bytes().await.map(|b| b.to_vec()).map_err(reqwest_error)
+        successful_response
+            .bytes()
+            .await
+            .map(|b| b.to_vec())
+            .map_err(reqwest_error)
     }
 
     /// Send the request and await a response from the server.
@@ -279,6 +283,50 @@ mod test {
         assert_eq!(
             Serializer::<Ver01>::deserialize::<String>(&res.bytes().await.unwrap()).unwrap(),
             "response"
+        );
+    }
+
+    #[async_std::test]
+    async fn test_bad_response_bytes() {
+        setup_logging();
+        setup_backtrace();
+
+        // Set up a simple Tide Disco app.
+        let mut app: App<(), ServerError> = App::with_state(());
+        let api = toml! {
+            [route.integer]
+            PATH = ["/integer"]
+        };
+
+        app.module::<ServerError, Ver01>("app", api)
+            .unwrap()
+            .get::<_, u64>("integer", |_req, _state| {
+                async move {
+                    Err(ServerError::catch_all(
+                        StatusCode::NOT_FOUND,
+                        "not found".to_string(),
+                    ))
+                }
+                .boxed()
+            })
+            .unwrap();
+
+        let port = pick_unused_port().unwrap();
+        spawn(app.serve(format!("0.0.0.0:{port}"), VER_0_1));
+
+        // Connect client
+        let client = Client::<ServerError, Ver01>::builder(
+            format!("http://localhost:{port}").parse().unwrap(),
+        )
+        .build();
+        assert!(client.connect(None).await);
+
+        // Make a request and expect the .bytes() call to fail
+        let result = client.get::<String>("app/integer").bytes().await;
+
+        assert!(
+            result.is_err(),
+            "Expected error from .bytes() due to server-side failure"
         );
     }
 }
