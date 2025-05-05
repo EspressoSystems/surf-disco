@@ -322,7 +322,7 @@ mod test {
         assert!(client.connect(None).await);
 
         // Make a request and expect the .bytes() call to fail
-        let result = client.get::<String>("app/integer").bytes().await;
+        let result = client.get::<()>("app/integer").bytes().await;
 
         assert!(
             result.is_err(),
