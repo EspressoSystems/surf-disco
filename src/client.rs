@@ -162,6 +162,10 @@ impl<E: Error, VER: StaticVersionType> Client<E, VER> {
             _marker: Default::default(),
         })
     }
+
+    pub fn base_url(&self) -> Url {
+        self.base_url.clone()
+    }
 }
 
 /// Interface to specify optional configuration values before creating a [Client].
