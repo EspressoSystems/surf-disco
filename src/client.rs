@@ -8,6 +8,7 @@ use crate::{
     http, request::reqwest_error_msg, Error, Method, Request, SocketRequest, StatusCode, Url,
 };
 use async_std::task::sleep;
+use async_tungstenite::tungstenite::protocol::WebSocketConfig;
 use derivative::Derivative;
 use serde::de::DeserializeOwned;
 use std::time::{Duration, Instant};
@@ -146,8 +147,26 @@ impl<E: Error, VER: StaticVersionType> Client<E, VER> {
     ///
     /// This will panic if a malformed URL is passed.
     pub fn socket(&self, route: &str) -> SocketRequest<E, VER> {
-        SocketRequest::new(self.base_url.join(route).unwrap(), self.accept)
+        SocketRequest::new(self.base_url.join(route).unwrap(), self.accept, None)
             .header("Accept", http::Mime::from(self.accept).to_string())
+    }
+
+    /// Build a streaming connection request using a custom [`WebSocketConfig`].
+    ///
+    /// # Panics
+    ///
+    /// This will panic if a malformed URL is passed.
+    pub fn socket_with_config(
+        &self,
+        route: &str,
+        config: WebSocketConfig,
+    ) -> SocketRequest<E, VER> {
+        SocketRequest::new(
+            self.base_url.join(route).unwrap(),
+            self.accept,
+            Some(config),
+        )
+        .header("Accept", http::Mime::from(self.accept).to_string())
     }
 
     /// Create a client for a sub-module of the connected application.

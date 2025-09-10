@@ -24,6 +24,7 @@ use vbs::version::StaticVersionType;
 
 pub mod client;
 pub mod error;
+pub mod reexports;
 pub mod request;
 pub mod socket;
 

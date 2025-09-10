@@ -9,8 +9,11 @@ use crate::{
     ContentType, Error, StatusCode, Url,
 };
 use async_tungstenite::{
-    async_std::{connect_async, ConnectStream},
-    tungstenite::{http::request::Builder as RequestBuilder, Error as WsError, Message},
+    async_std::{connect_async_with_config, ConnectStream},
+    tungstenite::{
+        http::request::Builder as RequestBuilder, protocol::WebSocketConfig, Error as WsError,
+        Message,
+    },
     WebSocketStream,
 };
 use futures::{
@@ -27,16 +30,22 @@ pub struct SocketRequest<E, VER: StaticVersionType> {
     url: Url,
     content_type: ContentType,
     headers: HashMap<String, Vec<String>>,
+    config: Option<WebSocketConfig>,
     marker: std::marker::PhantomData<fn(E, VER) -> ()>,
 }
 
 impl<E: Error, VER: StaticVersionType> SocketRequest<E, VER> {
-    pub(crate) fn new(mut url: Url, content_type: ContentType) -> Self {
+    pub(crate) fn new(
+        mut url: Url,
+        content_type: ContentType,
+        config: Option<WebSocketConfig>,
+    ) -> Self {
         url.set_scheme(&socket_scheme(url.scheme())).unwrap();
         Self {
             url,
             content_type,
             headers: Default::default(),
+            config,
             marker: Default::default(),
         }
     }
@@ -69,7 +78,7 @@ impl<E: Error, VER: StaticVersionType> SocketRequest<E, VER> {
                 .body(())
                 .map_err(|err| E::catch_all(StatusCode::BAD_REQUEST, err.to_string()))?;
 
-            let err = match connect_async(req).await {
+            let err = match connect_async_with_config(req, self.config).await {
                 Ok((conn, _)) => return Ok(Connection::new(conn, self.content_type)),
                 Err(err) => err,
             };
