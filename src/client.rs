@@ -245,6 +245,10 @@ impl<E: Error, VER: StaticVersionType> ClientBuilder<E, VER> {
             _marker: Default::default(),
         }
     }
+    pub fn set_tcp_nodelay(mut self, nodelay: bool) -> Self {
+        self.inner = self.inner.tcp_nodelay(nodelay);
+        self
+    }
 }
 
 impl<E: Error, VER: StaticVersionType> From<ClientBuilder<E, VER>> for Client<E, VER> {
