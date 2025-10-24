@@ -249,6 +249,18 @@ impl<E: Error, VER: StaticVersionType> ClientBuilder<E, VER> {
         self.inner = self.inner.tcp_nodelay(nodelay);
         self
     }
+    pub fn set_tcp_keepalive(mut self, keepalive: Option<Duration>) -> Self {
+        self.inner = self.inner.tcp_keepalive(keepalive);
+        self
+    }
+    pub fn set_http2_keepalive(mut self, keepalive: bool, duration: Option<Duration>) -> Self {
+        self.inner = self
+            .inner
+            .http2_keep_alive_while_idle(keepalive)
+            .http2_keep_alive_interval(duration)
+            .http2_keep_alive_timeout(Duration::from_secs(60));
+        self
+    }
 }
 
 impl<E: Error, VER: StaticVersionType> From<ClientBuilder<E, VER>> for Client<E, VER> {
