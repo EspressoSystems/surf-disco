@@ -209,7 +209,7 @@ impl<E: Error, VER: StaticVersionType> ClientBuilder<E, VER> {
         builder = builder.tcp_nodelay(true);
         builder = builder.tcp_keepalive(Some(Duration::from_secs(1)));
         builder = builder.http2_keep_alive_while_idle(true);
-        builder = builder.http2_keep_alive_interval(Some(Duration::from_secs(60)));
+        builder = builder.http2_keep_alive_interval(Some(Duration::from_secs(2)));
         builder = builder.http2_keep_alive_timeout(Duration::from_secs(60));
         Self {
             inner: builder,
