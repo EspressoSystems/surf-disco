@@ -205,8 +205,14 @@ impl<E: Error, VER: StaticVersionType> ClientBuilder<E, VER> {
         if !base_url.path().ends_with('/') {
             base_url.set_path(&format!("{}/", base_url.path()));
         }
+        let mut builder = reqwest::Client::builder();
+        builder = builder.tcp_nodelay(true);
+        builder = builder.tcp_keepalive(Some(Duration::from_secs(1)));
+        builder = builder.http2_keep_alive_while_idle(true);
+        builder = builder.http2_keep_alive_interval(Some(Duration::from_secs(60)));
+        builder = builder.http2_keep_alive_timeout(Duration::from_secs(60));
         Self {
-            inner: reqwest::Client::builder(),
+            inner: builder,
             accept: ContentType::Binary,
             base_url,
             timeout: Some(Duration::from_secs(60)),
